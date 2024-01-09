@@ -1,6 +1,13 @@
 package ws
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+)
 
 type Hub struct {
 	Register    chan *Client
@@ -17,6 +24,14 @@ type Hub struct {
 type HubOptions struct {
 	MaxSavedMessage    int
 	MaxReturnedMessage int
+}
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
 }
 
 func (h *Hub) Defaults() {
@@ -55,11 +70,59 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) register(conn *Client) {
+func (h *Hub) Handler() gin.HandlerFunc {
+	fmt.Println("Start Handler")
+	return func(ctx *gin.Context) {
 
+		if websocket.IsWebSocketUpgrade(ctx.Request) {
+			conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+			if err != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+
+			clientID := GetRandomID()
+			client := &Client{Conn: conn, ClientID: clientID}
+
+			h.Register <- client
+
+			defer func() {
+				h.Unregister <- client
+
+				if err := conn.Close(); err != nil {
+					fmt.Printf("%#v\n", err)
+				}
+			}()
+
+			for {
+				var request Request
+				if err := client.ReadJSON(&request); err != nil {
+					fmt.Println("1", err)
+					if e := h.error(client, errors.New("Bad Request")); e != nil {
+						return
+					}
+					continue
+				}
+
+				request.ID = GetRandomID()
+				request.ClientID = clientID
+
+				switch request.Type {
+				case JOIN_ROOM:
+					{
+						h.JoinRoom <- &request
+					}
+				}
+			}
+		}
+	}
+}
+
+func (h *Hub) register(conn *Client) {
+	fmt.Println("Register !!!!!!!!!", conn.ClientID)
 	clientID := conn.ClientID
 	if len(clientID) == 0 {
-		// h.unregister(conn)
+		h.unregister(conn)
 		return
 	}
 
@@ -87,7 +150,12 @@ func (h *Hub) register(conn *Client) {
 	}
 }
 
+func (h *Hub) createRoom(conn *Client) {
+
+}
+
 func (h *Hub) unregister(conn *Client) {
+	fmt.Println("Unregister: ", conn.ClientID)
 	clientID := conn.ClientID
 	if len(clientID) == 0 {
 		h.error(conn, errors.New("Server Error"))
