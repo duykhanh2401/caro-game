@@ -10,14 +10,19 @@ const (
 )
 
 type Room struct {
-	ID    string   `json:"id"`
-	Name  string   `json:"name"`
-	Type  RoomType `json:"type"`
-	Users []string `json:"-"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Type        RoomType `json:"type"`
+	Users       []string `json:"-"`
+	Master      string   `json:"roomMaster"`
+	MasterWin   int      `json:"roomMasterWin"`
+	Guest       string   `json:"guest"`
+	GuestWin    int      `json:"guestWin"`
+	MasterFirst bool     `json:"roomMasterFirst"`
 }
 
 type RoomStore interface {
-	Create(roomID string, roomName string, roomType RoomType)
+	Create(roomID string, roomName string, userCreate string, roomType RoomType)
 	Join(roomID string, userID string) bool
 	Leave(roomID string, userID string)
 	Users(roomID string) []string
@@ -39,7 +44,7 @@ type InMemoryRoomStore struct {
 
 var _ RoomStore = (*InMemoryRoomStore)(nil)
 
-func (r *InMemoryRoomStore) Create(roomID string, roomName string, roomType RoomType) {
+func (r *InMemoryRoomStore) Create(roomID string, roomName string, userCreate string, roomType RoomType) {
 	r.Lock()
 	_, ok := r.rooms[roomID]
 	r.Unlock()
@@ -47,10 +52,11 @@ func (r *InMemoryRoomStore) Create(roomID string, roomName string, roomType Room
 	if !ok {
 		r.Lock()
 		r.rooms[roomID] = Room{
-			ID:    roomID,
-			Name:  roomName,
-			Type:  roomType,
-			Users: []string{},
+			ID:          roomID,
+			Name:        roomName,
+			Type:        roomType,
+			Master:      userCreate,
+			MasterFirst: true,
 		}
 		r.Unlock()
 	}
@@ -64,8 +70,14 @@ func (r *InMemoryRoomStore) Join(roomID string, userID string) bool {
 	if ok {
 		r.Lock()
 		tmp := r.rooms[roomID]
-		tmp.Users = append(tmp.Users, userID)
-		r.rooms[roomID] = tmp
+		if tmp.Guest != "" {
+			tmp.Guest = userID
+			tmp.GuestWin = 0
+			tmp.MasterWin = 0
+			r.rooms[roomID] = tmp
+		} else {
+			return false
+		}
 		r.Unlock()
 	}
 	return ok
@@ -87,14 +99,22 @@ func (r *InMemoryRoomStore) Leave(roomID string, userID string) {
 		r.Unlock()
 	} else {
 		r.Lock()
-		for i, cid := range r.rooms[roomID].Users {
-			if userID == cid {
-				tmp := r.rooms[roomID]
-				tmp.Users = append(tmp.Users[:i], tmp.Users[i+1:]...)
-				r.rooms[roomID] = tmp
-				break // TODO: this break assumes users can join one room at a time
+
+		room, ok := r.rooms[roomID]
+		if ok {
+			room.GuestWin = 0
+			room.MasterWin = 0
+			room.MasterFirst = true
+			if room.Guest == userID {
+				room.Guest = ""
+			} else if room.Master == userID {
+				room.Master = room.Guest
+				room.Guest = ""
 			}
+
+			r.rooms[roomID] = room
 		}
+
 		r.Unlock()
 	}
 }
