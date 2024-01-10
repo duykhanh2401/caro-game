@@ -24,6 +24,8 @@ type Room struct {
 	GuestWin     int         `json:"guestWin"`
 	MasterFirst  bool        `json:"roomMasterFirst"`
 	IsMasterTurn bool        `json:"isMasterTurn"`
+	GuestReady   bool        `json:"guestReady"`
+	MasterReady  bool        `json:"masterReady"`
 	DataCaro     [20][20]int `json:"-"`
 }
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -17,17 +18,27 @@ var (
 	ErrNotFound    = errors.New("Data Not Found")
 )
 
+type Message struct {
+	ID        string `json:"id"`
+	UserID    string `json:"userId"`
+	User      *User  `json:"user"`
+	RoomID    string `json:"roomId"`
+	Message   string `json:"message"`
+	Timestamp int64  `json:"timestamp"`
+}
+
 type Hub struct {
-	Register    chan *Client
-	Unregister  chan *Client
-	JoinRoom    chan *Request
-	LeaveRoom   chan *Request
-	SendMessage chan *Request
-	CreateRoom  chan *Request
-	Options     *HubOptions
-	connection  ConnectionStore
-	room        RoomStore
-	user        UserStore
+	Register       chan *Client
+	Unregister     chan *Client
+	JoinRoom       chan *Request
+	LeaveRoom      chan *Request
+	SendMessage    chan *Request
+	CreateRoom     chan *Request
+	ChangeUserName chan *Request
+	Options        *HubOptions
+	connection     ConnectionStore
+	room           RoomStore
+	user           UserStore
 }
 
 type HubOptions struct {
@@ -55,12 +66,13 @@ func (h *Hub) Defaults() {
 
 func NewHub() *Hub {
 	return &Hub{
-		Register:    make(chan *Client),
-		Unregister:  make(chan *Client),
-		JoinRoom:    make(chan *Request),
-		LeaveRoom:   make(chan *Request),
-		SendMessage: make(chan *Request),
-		CreateRoom:  make(chan *Request),
+		Register:       make(chan *Client),
+		Unregister:     make(chan *Client),
+		JoinRoom:       make(chan *Request),
+		LeaveRoom:      make(chan *Request),
+		SendMessage:    make(chan *Request),
+		CreateRoom:     make(chan *Request),
+		ChangeUserName: make(chan *Request),
 	}
 }
 
@@ -82,6 +94,14 @@ func (h *Hub) Run() {
 		case req := <-h.JoinRoom:
 			{
 				h.joinRoom(req)
+			}
+		case req := <-h.ChangeUserName:
+			{
+				h.changeUsername(req)
+			}
+		case req := <-h.SendMessage:
+			{
+				h.sendMessage(req)
 			}
 		}
 
@@ -135,6 +155,14 @@ func (h *Hub) Handler() gin.HandlerFunc {
 					{
 						h.JoinRoom <- &request
 					}
+				case CHANGE_USERNAME:
+					{
+						h.ChangeUserName <- &request
+					}
+				case SEND_MESSAGE:
+					{
+						h.SendMessage <- &request
+					}
 				}
 			}
 		}
@@ -173,12 +201,63 @@ func (h *Hub) register(conn *Client) {
 	}
 }
 
+func (h *Hub) changeUsername(req *Request) {
+	fmt.Println("Change Username !!!")
+	conn, ok := h.connection.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+		return
+	}
+
+	var username string
+	{
+		if tmp, ok := req.Body["username"]; ok {
+			if s, ok := tmp.(string); ok {
+				username = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	// Load user
+	user, ok := h.user.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+		return
+	}
+
+	user.Username = username
+	h.user.Store(user.ID, user)
+
+	// Inform user itself here
+	res := Response{
+		Body: map[string]interface{}{
+			"message": "your username is changed",
+			"data":    &user,
+		},
+		Type: ME_CHANGED_USERNAME,
+	}
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+			// return
+		}
+	}
+}
+
 func (h *Hub) createRoom(req *Request) {
 	fmt.Println("Create Room !!!")
 	conn, ok := h.connection.Load(req.ClientID)
 	if !ok {
 		h.error(conn, ErrBadRequest)
 		h.unregister(conn)
+		return
 	}
 
 	roomID := EncodeToString(6)
@@ -198,6 +277,104 @@ func (h *Hub) createRoom(req *Request) {
 	if err := conn.WriteJSON(res); err != nil {
 		if e := h.error(conn, ErrServerError); e != nil {
 			h.unregister(conn)
+			// return
+		}
+	}
+}
+
+func (h *Hub) sendMessage(req *Request) {
+	fmt.Println("Send Message !!!")
+	conn, ok := h.connection.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+	}
+
+	var roomID string
+	{
+		if tmp, ok := req.Body["roomID"]; ok {
+			if s, ok := tmp.(string); ok {
+				roomID = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	room, ok := h.room.Room(roomID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+	}
+
+	if room.Guest != req.ClientID && room.Master != req.ClientID {
+		h.error(conn, errors.New("Bạn không có quyền gửi tin nhắn"))
+		return
+	}
+
+	var message string
+	{
+		if tmp, ok := req.Body["message"]; ok {
+			if s, ok := tmp.(string); ok {
+				message = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	newMessage := Message{
+		ID:        req.ID,
+		UserID:    req.ClientID,
+		RoomID:    roomID,
+		Message:   message,
+		Timestamp: time.Now().Unix() * 1000,
+	}
+
+	user, ok := h.user.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+		return
+	}
+
+	res := Response{
+		Body: map[string]interface{}{
+			"data": &newMessage,
+		},
+		Type: ME_MESSAGE_SEND,
+	}
+
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+			// return
+		}
+	}
+
+	res.Type = OTHER_MESSAGE_SEND
+	newMessage.User = &user
+
+	var c *Client
+	if room.Guest != req.ClientID {
+		if tmp, ok := h.connection.Load(room.Guest); ok {
+			c = tmp
+		}
+	} else if room.Master != req.ClientID {
+		if tmp, ok := h.connection.Load(room.Master); ok {
+			c = tmp
+		}
+	}
+
+	if err := c.WriteJSON(res); err != nil {
+		if e := h.error(c, ErrServerError); e != nil {
+			h.unregister(c)
 			// return
 		}
 	}
