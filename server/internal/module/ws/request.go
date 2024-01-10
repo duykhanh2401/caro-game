@@ -16,6 +16,7 @@ const (
 	LEFT_CHAT
 	SEND_MESSAGE
 	GET_OLD_MESSAGES
+	CREATE_ROOM
 )
 
 func (t RequestType) String() string {
@@ -26,5 +27,6 @@ func (t RequestType) String() string {
 		"LEFT_CHAT",
 		"SEND_MESSAGE",
 		"GET_OLD_MESSAGES",
+		"CREATE_ROOM",
 	}[t]
 }

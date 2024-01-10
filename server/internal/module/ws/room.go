@@ -1,6 +1,10 @@
 package ws
 
-import "sync"
+import (
+	"errors"
+	"fmt"
+	"sync"
+)
 
 type RoomType int
 
@@ -10,19 +14,21 @@ const (
 )
 
 type Room struct {
-	ID          string   `json:"id"`
-	Name        string   `json:"name"`
-	Type        RoomType `json:"type"`
-	Users       []string `json:"-"`
-	Master      string   `json:"roomMaster"`
-	MasterWin   int      `json:"roomMasterWin"`
-	Guest       string   `json:"guest"`
-	GuestWin    int      `json:"guestWin"`
-	MasterFirst bool     `json:"roomMasterFirst"`
+	ID           string      `json:"id"`
+	Name         string      `json:"name"`
+	Type         RoomType    `json:"type"`
+	Users        []string    `json:"-"`
+	Master       string      `json:"roomMaster"`
+	MasterWin    int         `json:"roomMasterWin"`
+	Guest        string      `json:"guest"`
+	GuestWin     int         `json:"guestWin"`
+	MasterFirst  bool        `json:"roomMasterFirst"`
+	IsMasterTurn bool        `json:"isMasterTurn"`
+	DataCaro     [20][20]int `json:"-"`
 }
 
 type RoomStore interface {
-	Create(roomID string, roomName string, userCreate string, roomType RoomType)
+	Create(roomID string, roomName string, userCreate string, roomType RoomType) error
 	Join(roomID string, userID string) bool
 	Leave(roomID string, userID string)
 	Users(roomID string) []string
@@ -44,7 +50,7 @@ type InMemoryRoomStore struct {
 
 var _ RoomStore = (*InMemoryRoomStore)(nil)
 
-func (r *InMemoryRoomStore) Create(roomID string, roomName string, userCreate string, roomType RoomType) {
+func (r *InMemoryRoomStore) Create(roomID string, roomName string, userCreate string, roomType RoomType) error {
 	r.Lock()
 	_, ok := r.rooms[roomID]
 	r.Unlock()
@@ -52,38 +58,61 @@ func (r *InMemoryRoomStore) Create(roomID string, roomName string, userCreate st
 	if !ok {
 		r.Lock()
 		r.rooms[roomID] = Room{
-			ID:          roomID,
-			Name:        roomName,
-			Type:        roomType,
-			Master:      userCreate,
-			MasterFirst: true,
+			ID:           roomID,
+			Name:         roomName,
+			Type:         roomType,
+			Master:       userCreate,
+			MasterFirst:  true,
+			IsMasterTurn: true,
 		}
 		r.Unlock()
+	} else {
+		return errors.New("Phòng đã tồn tại")
 	}
+
+	return nil
+}
+
+func (r *InMemoryRoomStore) ResetDataCaro(roomID string) {
+
+	r.Lock()
+	room, ok := r.rooms[roomID]
+	r.Unlock()
+	if ok {
+		for y := 0; y < 20; y++ {
+			for x := 0; x < 20; x++ {
+				room.DataCaro[x][y] = 0
+			}
+		}
+	}
+
 }
 
 func (r *InMemoryRoomStore) Join(roomID string, userID string) bool {
 	r.Lock()
 	_, ok := r.rooms[roomID]
 	r.Unlock()
-
+	fmt.Println(ok)
 	if ok {
 		r.Lock()
 		tmp := r.rooms[roomID]
-		if tmp.Guest != "" {
+		if tmp.Guest == "" {
 			tmp.Guest = userID
 			tmp.GuestWin = 0
 			tmp.MasterWin = 0
+			tmp.IsMasterTurn = true
 			r.rooms[roomID] = tmp
 		} else {
 			return false
 		}
 		r.Unlock()
+		r.ResetDataCaro(roomID)
 	}
 	return ok
 }
 
 func (r *InMemoryRoomStore) Leave(roomID string, userID string) {
+	fmt.Println("User ID Leave Room: ", roomID, userID)
 	if roomID == "" { // TODO: find a better way to handle unknown roomId situation
 		r.Lock()
 		for id, room := range r.rooms {
@@ -105,9 +134,13 @@ func (r *InMemoryRoomStore) Leave(roomID string, userID string) {
 			room.GuestWin = 0
 			room.MasterWin = 0
 			room.MasterFirst = true
+			room.IsMasterTurn = true
+
 			if room.Guest == userID {
 				room.Guest = ""
-			} else if room.Master == userID {
+			} else if room.Master == userID && room.Guest == "" {
+				delete(r.rooms, roomID)
+			} else if room.Master == userID && room.Guest != "" {
 				room.Master = room.Guest
 				room.Guest = ""
 			}
@@ -156,12 +189,10 @@ func (r *InMemoryRoomStore) UserJoinedTo(userID string) (room Room, ok bool) {
 	var rm Room
 	r.Lock()
 	for _, room := range r.rooms {
-		for _, cid := range room.Users {
-			if cid == userID {
-				rm = room
-				r.Unlock()
-				return rm, true
-			}
+		if room.Guest == userID || room.Master == userID {
+			rm = room
+			r.Unlock()
+			return rm, true
 		}
 	}
 	r.Unlock()

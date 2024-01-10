@@ -21,6 +21,7 @@ const (
 	ME_MESSAGE_SEND
 	OTHER_MESSAGE_SEND
 	OLD_MESSAGES
+	ME_CREATED_ROOM
 )
 
 func (t ResponseType) String() string {
@@ -36,6 +37,6 @@ func (t ResponseType) String() string {
 		"OTHER_LEFT_CHAT",
 		"ME_MESSAGE_SEND",
 		"OTHER_MESSAGE_SEND",
-		"OLD_MESSAGES",
+		"OLD_MESSAGES", "ME_CREATED_ROOM",
 	}[t]
 }

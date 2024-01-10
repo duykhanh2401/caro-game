@@ -1,12 +1,20 @@
 package ws
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+)
+
+var (
+	ErrBadRequest  = errors.New("Bad Request")
+	ErrServerError = errors.New("Server Error")
+	ErrNotFound    = errors.New("Data Not Found")
 )
 
 type Hub struct {
@@ -15,6 +23,7 @@ type Hub struct {
 	JoinRoom    chan *Request
 	LeaveRoom   chan *Request
 	SendMessage chan *Request
+	CreateRoom  chan *Request
 	Options     *HubOptions
 	connection  ConnectionStore
 	room        RoomStore
@@ -51,6 +60,7 @@ func NewHub() *Hub {
 		JoinRoom:    make(chan *Request),
 		LeaveRoom:   make(chan *Request),
 		SendMessage: make(chan *Request),
+		CreateRoom:  make(chan *Request),
 	}
 }
 
@@ -64,6 +74,14 @@ func (h *Hub) Run() {
 		case conn := <-h.Unregister:
 			{
 				h.unregister(conn)
+			}
+		case req := <-h.CreateRoom:
+			{
+				h.createRoom(req)
+			}
+		case req := <-h.JoinRoom:
+			{
+				h.joinRoom(req)
 			}
 		}
 
@@ -98,7 +116,7 @@ func (h *Hub) Handler() gin.HandlerFunc {
 				var request Request
 				if err := client.ReadJSON(&request); err != nil {
 					fmt.Println("1", err)
-					if e := h.error(client, errors.New("Bad Request")); e != nil {
+					if e := h.error(client, ErrBadRequest); e != nil {
 						return
 					}
 					continue
@@ -106,8 +124,13 @@ func (h *Hub) Handler() gin.HandlerFunc {
 
 				request.ID = GetRandomID()
 				request.ClientID = clientID
-
+				fmt.Println("Request: ", request)
 				switch request.Type {
+				case CREATE_ROOM:
+					{
+						fmt.Println("Start Create Room", request)
+						h.CreateRoom <- &request
+					}
 				case JOIN_ROOM:
 					{
 						h.JoinRoom <- &request
@@ -143,22 +166,127 @@ func (h *Hub) register(conn *Client) {
 	}
 
 	if err := conn.WriteJSON(res); err != nil {
-		if e := h.error(conn, errors.New("Server Error")); e != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
 			h.unregister(conn)
 			// return
 		}
 	}
 }
 
-func (h *Hub) createRoom(conn *Client) {
+func (h *Hub) createRoom(req *Request) {
+	fmt.Println("Create Room !!!")
+	conn, ok := h.connection.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+	}
 
+	roomID := EncodeToString(6)
+
+	if err := h.room.Create(roomID, roomID, req.ClientID, UserRoom); err != nil {
+		h.error(conn, err)
+		return
+	}
+	fmt.Println("Create Room ID: ", roomID)
+	res := Response{
+		Body: map[string]interface{}{
+			"message": "Bạn đã tạo phòng với ID: " + roomID,
+		},
+		Type: ME_CREATED_ROOM,
+	}
+
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+			// return
+		}
+	}
+}
+
+func (h *Hub) joinRoom(req *Request) {
+	fmt.Println("Join Room !!!")
+	conn, ok := h.connection.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+	}
+
+	var roomID string
+	{
+		if tmp, ok := req.Body["roomID"]; ok {
+			if s, ok := tmp.(string); ok {
+				roomID = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	fmt.Println("RoomID: ", roomID)
+	if ok := h.room.Join(roomID, req.ClientID); !ok {
+		fmt.Println("Join Room Err")
+		h.error(conn, errors.New("Phòng đã đầy"))
+		return
+	}
+	fmt.Println("Load User")
+
+	// Load user
+	user, ok := h.user.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+		return
+	}
+	fmt.Println("Load Room")
+
+	// Load Room
+	room, ok := h.room.Room(roomID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+	}
+	fmt.Println("Send Response")
+	res := Response{
+		Body: map[string]interface{}{
+			"message": "Bạn đã tham gia vào phòng : " + roomID,
+			"data": map[string]interface{}{
+				"room": room,
+			},
+		},
+		Type: ME_JOINED_CHAT,
+	}
+
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+			// return
+		}
+	}
+
+	res.Body = map[string]interface{}{
+		"message": "Có người chơi mới tham gia phòng",
+		"data":    user,
+	}
+	res.Type = OTHER_JOINED_CHAT
+
+	c, ok := h.connection.Load(room.Master)
+	if ok {
+		if err := c.WriteJSON(res); err != nil {
+			if e := h.error(conn, ErrServerError); e != nil {
+				h.unregister(conn)
+				// return
+			}
+		}
+	}
 }
 
 func (h *Hub) unregister(conn *Client) {
 	fmt.Println("Unregister: ", conn.ClientID)
 	clientID := conn.ClientID
 	if len(clientID) == 0 {
-		h.error(conn, errors.New("Server Error"))
+		h.error(conn, ErrServerError)
 		return
 	}
 
@@ -211,7 +339,7 @@ func (h *Hub) unregister(conn *Client) {
 				}
 
 				if err := c.WriteJSON(res); err != nil {
-					if e := h.error(c, errors.New("Server Error")); e != nil {
+					if e := h.error(c, ErrServerError); e != nil {
 						h.unregister(c)
 						// return
 						continue
@@ -231,3 +359,17 @@ func (h *Hub) error(conn *Client, err error) error {
 	}
 	return conn.WriteJSON(res)
 }
+
+func EncodeToString(max int) string {
+	b := make([]byte, max)
+	n, err := io.ReadAtLeast(rand.Reader, b, max)
+	if n != max {
+		panic(err)
+	}
+	for i := 0; i < len(b); i++ {
+		b[i] = table[int(b[i])%len(table)]
+	}
+	return string(b)
+}
+
+var table = [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
