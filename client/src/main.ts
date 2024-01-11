@@ -1,5 +1,15 @@
 import { createApp } from 'vue';
-import './style.css';
 import App from './App.vue';
 
-createApp(App).mount('#app');
+import router from './router';
+import InitGlobalComponent from './global';
+import { InitCore } from './core';
+import { InitStore } from './store';
+const app = createApp(App);
+
+InitStore(app);
+InitCore(app);
+
+app.use(router);
+app.mount('#app');
+InitGlobalComponent(app);
