@@ -46,6 +46,7 @@
 									{{ title }}
 								</h2>
 								<button
+									v-if="!disableClose"
 									@click="$emit('update:isOpen', false)"
 									class="text-[22px]"
 								>
@@ -101,6 +102,7 @@
 									{{ title }}
 								</h2>
 								<button
+									v-if="!disableClose"
 									@click="$emit('update:isOpen', false)"
 									class="text-[22px]"
 								>
@@ -176,5 +178,10 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	disableClose: {
+		type: Boolean,
+		default: false,
+	},
 });
+console.log(props.disableClose);
 </script>

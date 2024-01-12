@@ -21,7 +21,15 @@
 	}
 	html,
 	body {
-		@apply h-full;
+		@apply h-screen;
+		@apply w-[50vh];
+		margin: 0 auto;
+	}
+
+	@media only screen and (max-width: 768px) {
+		body {
+			width: 100%;
+		}
 	}
 
 	.app-wrapper {
