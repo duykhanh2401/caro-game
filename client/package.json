@@ -30,6 +30,7 @@
 		"remixicon": "^3.5.0",
 		"sass": "^1.63.6",
 		"tailwindcss": "^3.3.2",
+		"vite-svg-loader": "^5.1.0",
 		"vue": "^3.3.4",
 		"vue-cleave-component": "^3.0.2",
 		"vue-router": "^4.2.2",
