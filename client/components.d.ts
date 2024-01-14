@@ -18,6 +18,7 @@ declare module 'vue' {
     MobileSidebar: typeof import('./src/components/SideBar/MobileSidebar.vue')['default']
     Modal: typeof import('./src/components/Modal/index.vue')['default']
     Navmenu: typeof import('./src/components/SideBar/Navmenu.vue')['default']
+    PincodeInput: typeof import('./src/components/PincodeInput/index.vue')['default']
     Profile: typeof import('./src/components/Header/NavTools/Profile.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']

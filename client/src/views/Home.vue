@@ -1,19 +1,21 @@
 <template>
-	<div class="pb-[64px] relative h-[calc(100vh-64px)]">
+	<div class="pb-[64px] relative h-[calc(100%-64px)]">
 		<div class="flex items-center justify-center absolute top-1/4 left-0 right-0">
 			<div class="flex w-[280px] h-[140px]"><IConX /><IConO /></div>
 		</div>
 		<div class="flex flex-col items-center absolute bottom-[40px] left-0 right-0">
 			<span
-				class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center"
+				class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
+				@click="openCreateRoom = true"
 				>Tạo Phòng</span
 			>
 			<span
-				class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center"
+				class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
+				@click="openJoinRoom = true"
 				>Vào Phòng</span
 			>
 			<span
-				class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center"
+				class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
 				>Danh Sách Phòng</span
 			>
 		</div>
@@ -21,7 +23,7 @@
 	<div
 		class="nav-bottom fixed bottom-0 z-50 md:w-[50vh] md:left-1/2 left-0 h-16 w-full border-gray-200 dark:border-gray-600"
 	>
-		<div class="grid h-full max-w-lg grid-cols-4 font-medium">
+		<div class="grid h-full grid-cols-3 font-medium">
 			<button
 				type="button"
 				class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group"
@@ -38,33 +40,11 @@
 					/>
 				</svg>
 				<span
-					class="text-sm text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
-					>Home</span
+					class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
+					>Trang chủ</span
 				>
 			</button>
-			<button
-				type="button"
-				class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group"
-			>
-				<svg
-					class="w-5 h-5 mb-2 text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="currentColor"
-					viewBox="0 0 20 20"
-				>
-					<path
-						d="M11.074 4 8.442.408A.95.95 0 0 0 7.014.254L2.926 4h8.148ZM9 13v-1a4 4 0 0 1 4-4h6V6a1 1 0 0 0-1-1H1a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h17a1 1 0 0 0 1-1v-2h-6a4 4 0 0 1-4-4Z"
-					/>
-					<path
-						d="M19 10h-6a2 2 0 0 0-2 2v1a2 2 0 0 0 2 2h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1Zm-4.5 3.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2ZM12.62 4h2.78L12.539.41a1.086 1.086 0 1 0-1.7 1.352L12.62 4Z"
-					/>
-				</svg>
-				<span
-					class="text-sm text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
-					>Wallet</span
-				>
-			</button>
+
 			<button
 				type="button"
 				class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group"
@@ -85,36 +65,56 @@
 					/>
 				</svg>
 				<span
-					class="text-sm text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
-					>Settings</span
+					class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
+					>Cài Đặt</span
 				>
 			</button>
 			<button
 				type="button"
 				class="inline-flex flex-col items-center justify-center px-5 hover:bg-gray-50 dark:hover:bg-gray-800 group"
 			>
-				<svg
-					class="w-5 h-5 mb-2 text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
-					aria-hidden="true"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="currentColor"
-					viewBox="0 0 20 20"
-				>
-					<path
-						d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z"
-					/>
-				</svg>
+				<SwitchDark />
 				<span
-					class="text-sm text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
-					>Profile</span
+					class="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-500"
+					>Chế độ tối</span
 				>
 			</button>
 		</div>
 	</div>
+	<DKModal v-model:isOpen="openCreateRoom" :centered="true" title="Tạo phòng mới">
+		<DKTextInput label="Tên phòng:" placeholder="Tên của bạn..."></DKTextInput>
+		<div class="flex justify-end">
+			<DKButton btnClass="btn-primary btn-sm">Gửi</DKButton>
+		</div>
+	</DKModal>
+	<DKModal v-model:isOpen="openJoinRoom" :centered="true" title="Vào phòng">
+		<span>Vùi lòng nhập ID của phòng:</span>
+		<PincodeInput
+			class="justify-center mt-4"
+			v-model="pincode"
+			autofocus
+			:digits="6"
+			input-class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 mx-1"
+		/>
+	</DKModal>
 </template>
 <script setup lang="ts">
 import IConX from '@/assets/icons/x_icon.svg';
 import IConO from '@/assets/icons/o_icon.svg';
+import SwitchDark from '@/components/Header/NavTools/SwitchDark.vue';
+import { ref } from 'vue';
+import PincodeInput from '@/components/PincodeInput/index.vue';
+const openCreateRoom = ref(false);
+const openJoinRoom = ref(false);
+const openListRoom = ref(false);
+
+const pincode = ref('');
+
+function closeAllModal() {
+	openCreateRoom.value = false;
+	openJoinRoom.value = false;
+	openListRoom.value = false;
+}
 </script>
 <style>
 .nav-bottom {
