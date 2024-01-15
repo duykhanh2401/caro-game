@@ -1,1 +1,330 @@
-<template></template>
+<template>
+	<div class="game">
+		<div class="board-wrapper">
+			<table
+				class="board"
+				@touchmove="onTouchMove"
+				@touchstart="onTouchMove"
+				@touchend="onTouchEnd"
+			>
+				<tbody>
+					<tr v-for="(row, rowIndex) in getSplitDataArr()" :key="rowIndex">
+						<td
+							v-for="(cell, cellIndex) in row"
+							:key="cellIndex"
+							:style="getCellStyle(getBoardIndex(rowIndex, cellIndex))"
+							:data-key="getBoardIndex(rowIndex, cellIndex)"
+							:data-value="cell || 'empty'"
+							class="cell"
+							:class="getCellClassNames(getBoardIndex(rowIndex, cellIndex))"
+						>
+							<IConX v-if="cell == 'x'" />
+							<IConO v-else-if="cell == 'o'" />
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</div>
+</template>
+<script setup lang="ts">
+import { ref, getCurrentInstance } from 'vue';
+import IConX from '@/assets/icons/x_icon.svg';
+import IConO from '@/assets/icons/o_icon.svg';
+const data = ref<Array<String>>([]);
+const hoverCell = ref<number | null>();
+const gridCount = 15;
+
+function reset() {
+	data.value = new Array(gridCount * gridCount).fill(null);
+}
+
+function getSplitDataArr() {
+	return new Array(Math.ceil(data.value.length / gridCount))
+		.fill(null)
+		.map((item, i) => data.value.slice(gridCount * i, gridCount * (i + 1)));
+}
+
+const getCellStyle = (index) => {
+	const styles = { height: `${100 / gridCount}%`, width: `${100 / gridCount}%` };
+
+	// if (winnerRow) {
+	//     const winIndex = winnerRow.findIndex(i => i === index);
+	//     if (winIndex >= 0) styles.animationDelay = `${winIndex * (1 / gridCount)}s`;
+	// }
+
+	return styles;
+};
+
+const getCellClassNames = (index: number) => {
+	var sameRow = false;
+	var sameColumn = false;
+	if (hoverCell.value) {
+		sameRow =
+			Math.floor(index / gridCount) === Math.floor(hoverCell.value / gridCount);
+		sameColumn = index % gridCount === hoverCell.value % gridCount;
+	}
+
+	return {
+		hovered: index === hoverCell.value,
+		highlighted: Number.isInteger(hoverCell.value) && (sameRow || sameColumn),
+		// victorious: winnerRow?.includes(index),
+	};
+};
+
+const onTouchMove = (e) => {
+	const { clientX, clientY } = e.touches[0];
+	const el = document.elementFromPoint(clientX, clientY) as HTMLElement;
+	console.log(el?.dataset.key);
+	if (el?.dataset.key) {
+		hoverCell.value = el?.classList.contains('cell') ? +el?.dataset.key : null;
+	}
+};
+
+const onTouchEnd = (e) => {
+	const { clientX, clientY } = e.changedTouches[0];
+	const el = document.elementFromPoint(clientX, clientY) as HTMLElement;
+	const index = el?.dataset.key;
+	if (index) {
+		const cell = data.value[index];
+		if (index && cell === null) {
+			// handleCellSet(index);
+			// vibrate(25);
+		}
+		hoverCell.value = null;
+	}
+};
+
+// const handleCellSet = index => {
+//         setBoard(prevBoard => [...set(prevBoard, index, currentPlayer)]);
+//         togglePlayer();
+//     };
+
+const getBoardIndex = (rowIndex, cellIndex) => rowIndex * gridCount + cellIndex;
+
+reset();
+</script>
+<style lang="scss">
+table {
+	border-collapse: separate;
+}
+
+.game {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-evenly;
+	flex-wrap: wrap;
+	font-size: 2vmin;
+}
+
+.board-wrapper {
+	position: relative;
+	width: 40em;
+	height: 40em;
+
+	&.ended {
+		.board {
+			pointer-events: none;
+			opacity: 0.4;
+		}
+
+		.reset-block {
+			opacity: 1;
+			transform: scale(1);
+			pointer-events: auto;
+		}
+	}
+
+	.board {
+		width: 100%;
+		height: 100%;
+		margin: 0;
+		flex-wrap: wrap;
+		border-spacing: 0;
+		touch-action: none;
+	}
+
+	.reset-block {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		opacity: 0;
+		transform: scale(0.6);
+		transition: transform 0.2s ease, opacity 0.2s ease;
+		pointer-events: none;
+		z-index: 1;
+
+		.win-caption {
+			font-size: 4em;
+			text-shadow: 1px -1px 4px rgba(0, 0, 0, 0.3);
+			font-weight: bold;
+			user-select: none;
+		}
+	}
+}
+
+.cell {
+	border: 1px solid rgba(0, 0, 0, 0.2);
+	justify-content: center;
+	padding: 0;
+	align-items: center;
+	background-color: #fff;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	user-select: none;
+
+	> img {
+		display: block;
+		pointer-events: none;
+	}
+
+	&.victorious {
+		animation: bounce 2s infinite;
+	}
+}
+
+.status-panel {
+	padding: 1em 0;
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+	max-width: 40em;
+
+	.panel-x-block,
+	.panel-o-block,
+	.info-content {
+		display: flex;
+		align-items: flex-end;
+		font-size: 2.6em;
+
+		> img {
+			width: 1.2em;
+			transition: transform 0.2s ease, opacity 0.2s ease;
+		}
+	}
+
+	.panel-x-block,
+	.panel-o-block {
+		font-family: 'Roboto Mono', monospace;
+
+		> img {
+			opacity: 0.4;
+			margin-left: 0.2em;
+			transform-origin: left center;
+		}
+	}
+
+	.panel-o-block > img {
+		margin-left: 0;
+		margin-right: 0.2em;
+		transform-origin: right center;
+	}
+
+	&.x-move .panel-x-block,
+	&.o-move .panel-o-block {
+		> img {
+			opacity: 1;
+			transform: scale(1.6);
+		}
+	}
+}
+
+.menu {
+	height: 100%;
+	max-height: 100vw;
+	max-width: 100vh;
+	margin: 0 6em;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-evenly;
+	font-size: 2vmin;
+
+	.menu-items {
+		width: 100%;
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+
+		.menu-btn {
+			padding: 0.6em;
+			font-size: 2em;
+			font-family: inherit;
+			font-weight: bold;
+		}
+	}
+
+	.game-configs {
+		width: 100%;
+		flex-grow: 2;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-evenly;
+
+		.config-item {
+			font-size: 2em;
+		}
+	}
+}
+
+.config-item {
+	.menu-tab {
+		font-family: inherit;
+		font-size: 0.8em;
+
+		.MuiTab-iconWrapper {
+			font-size: 1em;
+
+			> svg {
+				width: 100%;
+				max-width: 50%;
+			}
+		}
+	}
+}
+
+@media (hover: none) {
+	.cell {
+		&:not(.victorious).hovered {
+			position: relative;
+			transform: scale(1.15);
+			box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+			z-index: 1;
+		}
+		&:not(.hovered).highlighted {
+			background-color: rgba(0, 0, 0, 0.1);
+		}
+	}
+}
+
+@media (hover: hover) {
+	.cell {
+		&:not(.victorious):hover {
+			position: relative;
+			transform: scale(1.15);
+			box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+			z-index: 1;
+		}
+	}
+}
+
+@keyframes bounce {
+	0% {
+		transform: scale(1);
+	}
+	10% {
+		transform: scale(1.2);
+	}
+	20% {
+		transform: scale(1);
+	}
+	100% {
+		transform: scale(1);
+	}
+}
+</style>
