@@ -168,6 +168,11 @@ table {
 	}
 }
 
+.dark .cell {
+	background-color: #1e293b;
+	border: 1.5px solid #0f172a;
+}
+
 .cell {
 	border: 1px solid rgba(0, 0, 0, 0.2);
 	justify-content: center;

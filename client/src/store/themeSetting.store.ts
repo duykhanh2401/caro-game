@@ -5,7 +5,7 @@ export const useThemeSetting = defineStore(
 	'themeSetting',
 	() => {
 		{
-			const isDark = ref(false);
+			const isDark = ref(true);
 			const theme = ref('dark');
 			const sidebarCollapse = ref(false);
 			const sidebarHidden = ref(false);
