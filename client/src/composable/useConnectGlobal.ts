@@ -1,8 +1,9 @@
 import { ref } from 'vue';
 import useWebSocket from './useWebSocket';
+import useUserState from './useUserState';
 
 const isConnecting = ref(false);
-const url = ref('ws://localhost:8080/ws/chat');
+const url = ref('ws://localhost:2401/ws/caro');
 const ws = ref<WebSocket>();
 
 enum ResponseEvents {
@@ -31,7 +32,8 @@ enum RequestEvents {
 	CREATE_ROOM,
 }
 
-export default function UseConnectGlobal() {
+export default function useConnectGlobal() {
+	const { me, users } = useUserState();
 	async function connectServer(): Promise<void> {
 		if (isConnecting.value) return;
 
@@ -47,6 +49,7 @@ export default function UseConnectGlobal() {
 		}
 
 		ws.value = connections.value.get(url.value);
+		addListener(ws.value);
 	}
 
 	async function addListener(ws: WebSocket | undefined) {
@@ -69,7 +72,51 @@ export default function UseConnectGlobal() {
 					console.log(JSON.stringify(res, null, 2));
 					break;
 				case ResponseEvents.CONNECTED:
+					console.log('ws Connected');
+					console.log(res);
+					me.value = res.body.data;
+					const username = window.localStorage.getItem('username');
+					if (username) {
+						changeUsername(username);
+					}
+					changeUsername();
+					break;
+				case ResponseEvents.ME_CHANGED_USERNAME:
+					me.value = { ...res.body.data };
+					me.value.isUpdateUserName = true;
+					console.log('Me:', me.value, res.body.data);
+
+					const isSaveUsername = window.localStorage.getItem('saveUsername');
+					if (isSaveUsername) {
+						window.localStorage.setItem('username', me.value.username);
+					}
+					break;
 			}
 		});
 	}
+
+	function changeUsername(username?: string) {
+		if (!username) return;
+
+		try {
+			ws.value?.send(
+				JSON.stringify({
+					type: RequestEvents.CHANGE_USERNAME,
+					body: {
+						username,
+					},
+				}),
+			);
+		} catch (error) {
+			console.log(error);
+		}
+	}
+
+	return {
+		connectServer,
+		changeUsername,
+		ws,
+		url,
+		me,
+	};
 }

@@ -24,12 +24,13 @@
 						: 'bg-slate-100 dark:bg-slate-600 dark:border-slate-600'
 				"
 			>
-				<img
+				<!-- <img
 					src="@/assets/images/icon/ck-white.svg"
 					alt=""
 					class="h-[10px] w-[10px] block m-auto"
 					v-if="ck"
-				/>
+				/> -->
+				<CK class="h-[10px] w-[10px] block m-auto" v-if="ck" />
 			</span>
 			<span
 				class="text-slate-500 dark:text-slate-400 text-sm leading-6"
@@ -41,8 +42,12 @@
 	</div>
 </template>
 <script>
-import { computed, defineComponent, ref } from 'vue';
+import { computed, ref } from 'vue';
+import CK from '@/assets/images/icon/ck-white.svg';
 export default {
+	components: {
+		CK,
+	},
 	props: {
 		label: {
 			type: String,
