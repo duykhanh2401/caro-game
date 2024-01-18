@@ -144,6 +144,8 @@ func (r *InMemoryRoomStore) Leave(roomID string, userID string) {
 				room.Guest = ""
 			} else if room.Master == userID && room.Guest == "" {
 				delete(r.rooms, roomID)
+				r.Unlock()
+				return
 			} else if room.Master == userID && room.Guest != "" {
 				room.Master = room.Guest
 				room.Guest = ""
