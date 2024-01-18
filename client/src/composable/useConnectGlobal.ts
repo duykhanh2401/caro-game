@@ -10,7 +10,7 @@ const ws = ref<WebSocket>();
 enum ResponseEvents {
 	ERROR,
 	CONNECTED,
-	TOPIC_ROOMS,
+	ME_GET_ROOMS,
 	ME_CHANGED_USERNAME,
 	OTHER_CHANGED_USERNAME,
 	ME_JOINED_CHAT,
@@ -107,6 +107,8 @@ export default function useConnectGlobal() {
 						},
 					];
 					toast.success('Bạn đã tạo phòng thành công !!!');
+				case ResponseEvents.ME_GET_ROOMS:
+					rooms.value = res.body.data;
 			}
 		});
 	}
@@ -144,10 +146,23 @@ export default function useConnectGlobal() {
 		}
 	}
 
+	function getRooms() {
+		try {
+			ws.value?.send(
+				JSON.stringify({
+					type: RequestEvents.GET_ROOMS,
+				}),
+			);
+		} catch (error) {
+			console.log(error);
+		}
+	}
+
 	return {
 		connectServer,
 		changeUsername,
 		createRoom,
+		getRooms,
 		ws,
 		url,
 		me,

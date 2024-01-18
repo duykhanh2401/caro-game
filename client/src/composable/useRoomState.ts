@@ -4,6 +4,14 @@ import type { IUser } from './useUserState';
 export interface IRoom {
 	id: string;
 	name: string;
+	master: string;
+	masterWin: number;
+	Guest: string;
+	GuestWin: number;
+	MasterFirst: boolean;
+	IsMasterTurn: boolean;
+	GuestReady: boolean;
+	MasterReady: boolean;
 }
 
 export interface IMessage {

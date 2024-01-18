@@ -16,6 +16,7 @@
 			>
 			<span
 				class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
+				@click="openModalGetRooms"
 				>Danh Sách Phòng</span
 			>
 		</div>
@@ -103,6 +104,34 @@
 			input-class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 mx-1"
 		/>
 	</DKModal>
+	<DKModal v-model:isOpen="openListRoom" title="Danh sách phòng">
+		<ul
+			v-for="room in rooms"
+			:key="room.id"
+			class="flex flex-col justify-end text-start -space-y-px"
+		>
+			<li
+				class="flex mb-2 items-center gap-x-2 p-3 text-sm bg-white border text-gray-800 first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:bg-slate-900 dark:border-gray-700 dark:text-gray-200"
+			>
+				<div class="w-full flex justify-between truncate">
+					<div class="flex-1">
+						<div class="me-3 flex-1 text-xl font-bold">
+							{{ room.name }}
+						</div>
+						<div class="me-3 flex-1 mt-1">
+							{{ room.id }}
+						</div>
+					</div>
+					<button
+						type="button"
+						class="flex items-center gap-x-2 text-gray-500 hover:text-blue-500 whitespace-nowrap"
+					>
+						Vào phòng
+					</button>
+				</div>
+			</li>
+		</ul>
+	</DKModal>
 </template>
 <script setup lang="ts">
 import IConX from '@/assets/icons/x_icon.svg';
@@ -115,10 +144,17 @@ import useConnectGlobal from '../composable/useConnectGlobal';
 const openCreateRoom = ref(false);
 const openJoinRoom = ref(false);
 const openListRoom = ref(false);
-const { createRoom, me } = useConnectGlobal();
+const { createRoom, me, getRooms } = useConnectGlobal();
+const { rooms } = useRoomState();
 
 const pincode = ref('');
 const roomName = ref('Phòng của ' + me.value.username);
+const isLoadingGetRooms = ref(false);
+
+function openModalGetRooms() {
+	openListRoom.value = true;
+	getRooms();
+}
 
 function closeAllModal() {
 	openCreateRoom.value = false;

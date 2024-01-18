@@ -11,7 +11,7 @@ type ResponseType int
 const (
 	ERROR ResponseType = iota
 	CONNECTED
-	TOPIC_ROOMS
+	ME_GET_ROOMS
 	ME_CHANGED_USERNAME
 	OTHER_CHANGED_USERNAME
 	ME_JOINED_CHAT
@@ -28,7 +28,7 @@ func (t ResponseType) String() string {
 	return []string{
 		"ERROR",
 		"CONNECTED",
-		"TOPIC_ROOMS",
+		"ME_GET_ROOMS",
 		"ME_CHANGED_USERNAME",
 		"OTHER_CHANGED_USERNAME",
 		"ME_JOINED_CHAT",

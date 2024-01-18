@@ -30,6 +30,7 @@ type Message struct {
 type Hub struct {
 	Register       chan *Client
 	Unregister     chan *Client
+	GetRooms       chan *Client
 	JoinRoom       chan *Request
 	LeaveRoom      chan *Request
 	SendMessage    chan *Request
@@ -68,6 +69,7 @@ func NewHub() *Hub {
 	return &Hub{
 		Register:       make(chan *Client),
 		Unregister:     make(chan *Client),
+		GetRooms:       make(chan *Client),
 		JoinRoom:       make(chan *Request),
 		LeaveRoom:      make(chan *Request),
 		SendMessage:    make(chan *Request),
@@ -86,6 +88,10 @@ func (h *Hub) Run() {
 		case conn := <-h.Unregister:
 			{
 				h.unregister(conn)
+			}
+		case conn := <-h.GetRooms:
+			{
+				h.getRooms(conn)
 			}
 		case req := <-h.CreateRoom:
 			{
@@ -162,6 +168,10 @@ func (h *Hub) Handler() gin.HandlerFunc {
 				case SEND_MESSAGE:
 					{
 						h.SendMessage <- &request
+					}
+				case GET_ROOMS:
+					{
+						h.GetRooms <- client
 					}
 				}
 			}
@@ -277,7 +287,7 @@ func (h *Hub) createRoom(req *Request) {
 		}
 	}
 
-	roomCreated, err := h.room.Create(roomID, roomName, req.ClientID, UserRoom)
+	roomCreated, err := h.room.Create(roomID, roomName, req.ClientID, TopicRoom)
 	if err != nil {
 		h.error(conn, err)
 		return
@@ -392,6 +402,24 @@ func (h *Hub) sendMessage(req *Request) {
 	if err := c.WriteJSON(res); err != nil {
 		if e := h.error(c, ErrServerError); e != nil {
 			h.unregister(c)
+			// return
+		}
+	}
+}
+
+func (h *Hub) getRooms(client *Client) {
+	rooms := h.room.Rooms()
+
+	res := Response{
+		Body: map[string]interface{}{
+			"data": rooms,
+		},
+		Type: ME_GET_ROOMS,
+	}
+
+	if err := client.WriteJSON(res); err != nil {
+		if e := h.error(client, ErrServerError); e != nil {
+			h.unregister(client)
 			// return
 		}
 	}
