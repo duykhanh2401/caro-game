@@ -262,7 +262,23 @@ func (h *Hub) createRoom(req *Request) {
 
 	roomID := EncodeToString(6)
 
-	if err := h.room.Create(roomID, roomID, req.ClientID, UserRoom); err != nil {
+	var roomName string
+	{
+		if tmp, ok := req.Body["roomName"]; ok {
+			if s, ok := tmp.(string); ok {
+				roomName = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	roomCreated, err := h.room.Create(roomID, roomName, req.ClientID, UserRoom)
+	if err != nil {
 		h.error(conn, err)
 		return
 	}
@@ -270,6 +286,7 @@ func (h *Hub) createRoom(req *Request) {
 	res := Response{
 		Body: map[string]interface{}{
 			"message": "Bạn đã tạo phòng với ID: " + roomID,
+			"room":    roomCreated,
 		},
 		Type: ME_CREATED_ROOM,
 	}

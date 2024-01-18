@@ -1,7 +1,8 @@
 import { ref } from 'vue';
 import useWebSocket from './useWebSocket';
 import useUserState from './useUserState';
-
+import { useToast } from 'vue-toastification';
+import useRoomState, { MessageType } from './useRoomState';
 const isConnecting = ref(false);
 const url = ref('ws://localhost:2401/ws/caro');
 const ws = ref<WebSocket>();
@@ -34,6 +35,8 @@ enum RequestEvents {
 
 export default function useConnectGlobal() {
 	const { me, users } = useUserState();
+	const { currentRoom, rooms, messages } = useRoomState();
+	const toast = useToast();
 	async function connectServer(): Promise<void> {
 		if (isConnecting.value) return;
 
@@ -85,12 +88,25 @@ export default function useConnectGlobal() {
 					me.value = { ...res.body.data };
 					me.value.isUpdateUserName = true;
 					console.log('Me:', me.value, res.body.data);
-
+					toast.success(`Chào mừng: ${me.value.username}`);
 					const isSaveUsername = window.localStorage.getItem('saveUsername');
 					if (isSaveUsername) {
 						window.localStorage.setItem('username', me.value.username);
 					}
 					break;
+				case ResponseEvents.ME_CREATED_ROOM:
+					currentRoom.value = res.body.room;
+					messages.value = [
+						...messages.value,
+						{
+							message: res.body.message,
+							timestamp: Date.now(),
+							id: '123',
+							type: MessageType.ME_JOINED,
+							user: me.value,
+						},
+					];
+					toast.success('Bạn đã tạo phòng thành công !!!');
 			}
 		});
 	}
@@ -112,9 +128,26 @@ export default function useConnectGlobal() {
 		}
 	}
 
+	function createRoom(roomName?: string) {
+		if (!roomName) return;
+		try {
+			ws.value?.send(
+				JSON.stringify({
+					type: RequestEvents.CREATE_ROOM,
+					body: {
+						roomName,
+					},
+				}),
+			);
+		} catch (error) {
+			console.log(error);
+		}
+	}
+
 	return {
 		connectServer,
 		changeUsername,
+		createRoom,
 		ws,
 		url,
 		me,

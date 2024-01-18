@@ -30,7 +30,7 @@ type Room struct {
 }
 
 type RoomStore interface {
-	Create(roomID string, roomName string, userCreate string, roomType RoomType) error
+	Create(roomID string, roomName string, userCreate string, roomType RoomType) (Room, error)
 	Join(roomID string, userID string) bool
 	Leave(roomID string, userID string)
 	Users(roomID string) []string
@@ -52,27 +52,29 @@ type InMemoryRoomStore struct {
 
 var _ RoomStore = (*InMemoryRoomStore)(nil)
 
-func (r *InMemoryRoomStore) Create(roomID string, roomName string, userCreate string, roomType RoomType) error {
+func (r *InMemoryRoomStore) Create(roomID string, roomName string, userCreate string, roomType RoomType) (Room, error) {
 	r.Lock()
 	_, ok := r.rooms[roomID]
 	r.Unlock()
 
-	if !ok {
-		r.Lock()
-		r.rooms[roomID] = Room{
-			ID:           roomID,
-			Name:         roomName,
-			Type:         roomType,
-			Master:       userCreate,
-			MasterFirst:  true,
-			IsMasterTurn: true,
-		}
-		r.Unlock()
-	} else {
-		return errors.New("Phòng đã tồn tại")
+	room := Room{
+		ID:           roomID,
+		Name:         roomName,
+		Type:         roomType,
+		Master:       userCreate,
+		MasterFirst:  true,
+		IsMasterTurn: true,
 	}
 
-	return nil
+	if !ok {
+		r.Lock()
+		r.rooms[roomID] = room
+		r.Unlock()
+	} else {
+		return Room{}, errors.New("Phòng đã tồn tại")
+	}
+
+	return room, nil
 }
 
 func (r *InMemoryRoomStore) ResetDataCaro(roomID string) {

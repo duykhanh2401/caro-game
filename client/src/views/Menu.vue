@@ -82,9 +82,15 @@
 		</div>
 	</div>
 	<DKModal v-model:isOpen="openCreateRoom" :centered="true" title="Tạo phòng mới">
-		<DKTextInput label="Tên phòng:" placeholder="Tên của bạn..."></DKTextInput>
+		<DKTextInput
+			label="Tên phòng:"
+			placeholder="Tên của bạn..."
+			v-model="roomName"
+		></DKTextInput>
 		<div class="flex justify-end">
-			<DKButton btnClass="btn-primary btn-sm">Gửi</DKButton>
+			<DKButton btnClass="btn-primary btn-sm" @click="createRoom(roomName)"
+				>Gửi</DKButton
+			>
 		</div>
 	</DKModal>
 	<DKModal v-model:isOpen="openJoinRoom" :centered="true" title="Vào phòng">
@@ -104,11 +110,15 @@ import IConO from '@/assets/icons/o_icon.svg';
 import SwitchDark from '@/components/Header/NavTools/SwitchDark.vue';
 import { ref } from 'vue';
 import PincodeInput from '@/components/PincodeInput/index.vue';
+import useRoomState from '../composable/useRoomState';
+import useConnectGlobal from '../composable/useConnectGlobal';
 const openCreateRoom = ref(false);
 const openJoinRoom = ref(false);
 const openListRoom = ref(false);
+const { createRoom, me } = useConnectGlobal();
 
 const pincode = ref('');
+const roomName = ref('Phòng của ' + me.value.username);
 
 function closeAllModal() {
 	openCreateRoom.value = false;
