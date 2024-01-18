@@ -181,7 +181,7 @@ func (r *InMemoryRoomStore) Rooms(includeUserRoom ...bool) []Room {
 	var rooms []Room
 	r.Lock()
 	for _, room := range r.rooms {
-		if room.Type == UserRoom && !incAll {
+		if (room.Type == UserRoom && !incAll) || (room.Guest != "" && room.Master != "") {
 			continue
 		}
 

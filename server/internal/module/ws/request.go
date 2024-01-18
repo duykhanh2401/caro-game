@@ -13,7 +13,7 @@ const (
 	GET_ROOMS RequestType = iota
 	CHANGE_USERNAME
 	JOIN_ROOM
-	LEFT_CHAT
+	LEFT_ROOM
 	SEND_MESSAGE
 	GET_OLD_MESSAGES
 	CREATE_ROOM
@@ -24,7 +24,7 @@ func (t RequestType) String() string {
 		"GET_ROOMS",
 		"CHANGE_USERNAME",
 		"JOIN_ROOM",
-		"LEFT_CHAT",
+		"LEFT_ROOM",
 		"SEND_MESSAGE",
 		"GET_OLD_MESSAGES",
 		"CREATE_ROOM",

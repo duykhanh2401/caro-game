@@ -309,6 +309,34 @@ func (h *Hub) createRoom(req *Request) {
 	}
 }
 
+func (h *Hub) leaveRoom(req *Request) {
+	fmt.Println("Leave Room !!!")
+	conn, ok := h.connection.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+		return
+	}
+
+	var roomID string
+	{
+		if tmp, ok := req.Body["roomID"]; ok {
+			if s, ok := tmp.(string); ok {
+				roomID = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	h.room.Leave(roomID, req.ClientID)
+
+}
+
 func (h *Hub) sendMessage(req *Request) {
 	fmt.Println("Send Message !!!")
 	conn, ok := h.connection.Load(req.ClientID)
@@ -551,7 +579,7 @@ func (h *Hub) unregister(conn *Client) {
 				"message": "a user lost connection",
 				"data":    &user,
 			},
-			Type: OTHER_LEFT_CHAT,
+			Type: OTHER_LEFT_ROOM,
 		}
 
 		for _, userID := range userIDs {

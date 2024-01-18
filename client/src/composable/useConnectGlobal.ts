@@ -15,8 +15,8 @@ enum ResponseEvents {
 	OTHER_CHANGED_USERNAME,
 	ME_JOINED_CHAT,
 	OTHER_JOINED_CHAT,
-	ME_LEFT_CHAT,
-	OTHER_LEFT_CHAT,
+	ME_LEFT_ROOM,
+	OTHER_LEFT_ROOM,
 	ME_MESSAGE_SEND,
 	OTHER_MESSAGE_SEND,
 	OLD_MESSAGES,
@@ -27,7 +27,7 @@ enum RequestEvents {
 	GET_ROOMS,
 	CHANGE_USERNAME,
 	JOIN_ROOM,
-	LEFT_CHAT,
+	LEFT_ROOM,
 	SEND_MESSAGE,
 	GET_OLD_MESSAGES,
 	CREATE_ROOM,
@@ -156,6 +156,17 @@ export default function useConnectGlobal() {
 		} catch (error) {
 			console.log(error);
 		}
+	}
+
+	function leaveRoom(roomID: string) {
+		if (!roomID) return;
+		try {
+			ws.value?.send(
+				JSON.stringify({
+					type: RequestEvents.LEFT_ROOM,
+				}),
+			);
+		} catch (error) {}
 	}
 
 	return {
