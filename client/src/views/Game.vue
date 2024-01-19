@@ -1,30 +1,89 @@
 <template>
-	<div class="game">
-		<div class="board-wrapper">
-			<table
-				class="board"
-				@touchmove="onTouchMove"
-				@touchstart="onTouchMove"
-				@touchend="onTouchEnd"
-			>
-				<tbody>
-					<tr v-for="(row, rowIndex) in getSplitDataArr()" :key="rowIndex">
-						<td
-							v-for="(cell, cellIndex) in row"
-							:key="cellIndex"
-							:style="getCellStyle(getBoardIndex(rowIndex, cellIndex))"
-							:data-key="getBoardIndex(rowIndex, cellIndex)"
-							:data-value="cell || 'empty'"
-							class="cell"
-							:class="getCellClassNames(getBoardIndex(rowIndex, cellIndex))"
-						>
-							<IConX v-if="cell == 'x'" />
-							<IConO v-else-if="cell == 'o'" />
-						</td>
-					</tr>
-				</tbody>
-			</table>
+	<div class="grid grid-cols-12 h-full">
+		<div class="col-span-2 hidden md:block"></div>
+		<div class="md:col-span-8 col-span-12 flex flex-col">
+			<div class="py-2">
+				<div class="px-3">
+					<div class="flex mx-2">
+						<div class="flex-auto flex items-center">
+							<div class="w-[40px]">
+								<IConX></IConX>
+							</div>
+							<div
+								class="text-right flex-shrink text-lg flex-grow flex-col"
+							>
+								<span> Duy Khánh</span>
+							</div>
+							<div
+								class="relative inline-block h-12 w-12 mx-2 !rounded-full object-cover object-center"
+							>
+								<img
+									alt="John's Animal Avatar"
+									:src="getRandomAvatar()"
+								/>
+							</div>
+							<div class="mr-2">0</div>
+						</div>
+						<div class="flex-auto flex flex-row-reverse items-center">
+							<div class="w-[40px]">
+								<IConO></IConO>
+							</div>
+							<div class="flex-shrink text-lg flex-grow flex-col">
+								<span> Duy Khánh</span>
+							</div>
+							<div
+								class="relative inline-block h-12 w-12 mx-2 !rounded-full object-cover object-center"
+							>
+								<img
+									alt="John's Animal Avatar"
+									:src="getRandomAvatar()"
+								/>
+							</div>
+							<div class="ml-2">0</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div></div>
+			<div></div>
+			<!-- <div class="game">
+				<div class="board-wrapper">
+					<table
+						class="board"
+						@touchmove="onTouchMove"
+						@touchstart="onTouchMove"
+						@touchend="onTouchEnd"
+					>
+						<tbody>
+							<tr
+								v-for="(row, rowIndex) in getSplitDataArr()"
+								:key="rowIndex"
+							>
+								<td
+									v-for="(cell, cellIndex) in row"
+									:key="cellIndex"
+									:style="
+										getCellStyle(getBoardIndex(rowIndex, cellIndex))
+									"
+									:data-key="getBoardIndex(rowIndex, cellIndex)"
+									:data-value="cell || 'empty'"
+									class="cell"
+									:class="
+										getCellClassNames(
+											getBoardIndex(rowIndex, cellIndex),
+										)
+									"
+								>
+									<IConX v-if="cell == 'x'" />
+									<IConO v-else-if="cell == 'o'" />
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div> -->
 		</div>
+		<div class="col-span-2 hidden md:block"></div>
 	</div>
 </template>
 <script setup lang="ts">
@@ -34,6 +93,86 @@ import IConO from '@/assets/icons/o_icon.svg';
 const data = ref<Array<String>>([]);
 const hoverCell = ref<number | null>();
 const gridCount = 15;
+
+const listAvatarRandom = [
+	'Alligator',
+	'Chipmunk',
+	'Gopher',
+	'Liger',
+	'Quagga',
+	'Anteater',
+	'Chupacabra',
+	'Grizzly',
+	'Llama',
+	'Rabbit',
+	'Armadillo',
+	'Cormorant',
+	'Hedgehog',
+	'Manatee',
+	'Raccoon',
+	'Auroch',
+	'Coyote',
+	'Hippo',
+	'Mink',
+	'Rhino',
+	'Axolotl',
+	'Crow',
+	'Hyena',
+	'Monkey',
+	'Sheep',
+	'Badger',
+	'Dingo',
+	'Ibex',
+	'Moose',
+	'Shrew',
+	'Bat',
+	'Dinosaur',
+	'Ifrit',
+	'Narwhal',
+	'Skunk',
+	'Beaver',
+	'Dolphin',
+	'Iguana',
+	'Orangutan',
+	'Squirrel',
+	'Buffalo',
+	'Duck',
+	'Jackal',
+	'Otter',
+	'Tiger',
+	'Camel',
+	'Elephant',
+	'Kangaroo',
+	'Panda',
+	'Turtle',
+	'Capybara',
+	'Ferret',
+	'Koala',
+	'Penguin',
+	'Walrus',
+	'Chameleon',
+	'Fox',
+	'Kraken',
+	'Platypus',
+	'Wolf',
+	'Cheetah',
+	'Frog',
+	'Lemur',
+	'Pumpkin',
+	'Wolverine',
+	'Chinchilla',
+	'Giraffe',
+	'Leopard',
+	'Python',
+	'Wombat',
+];
+
+function getRandomAvatar(): string {
+	return (
+		'https://anonymous-animals.azurewebsites.net/avatar/' +
+		listAvatarRandom[Math.floor(Math.random() * listAvatarRandom.length)]
+	);
+}
 
 function reset() {
 	data.value = new Array(gridCount * gridCount).fill(null);
