@@ -3,16 +3,18 @@
 		<div class="col-span-2 hidden md:block"></div>
 		<div class="md:col-span-8 col-span-12 flex flex-col">
 			<div class="py-2">
-				<div class="px-3">
-					<div class="flex mx-2">
-						<div class="flex-auto flex items-center">
+				<div class="px-3 container md:mx-auto">
+					<div class="flex mx-2 flex-wrap">
+						<div
+							class="flex-shrink-0 flex-grow-0 flex items-center basis-auto w-1/2"
+						>
 							<div class="w-[40px]">
 								<IConX></IConX>
 							</div>
 							<div
-								class="text-right flex-shrink text-lg flex-grow flex-col"
+								class="text-right min-w-0 flex-shrink text-lg flex flex-grow flex-col"
 							>
-								<span> Duy Khánh</span>
+								<span class="truncate">Duy Khánh</span>
 							</div>
 							<div
 								class="relative inline-block h-12 w-12 mx-2 !rounded-full object-cover object-center"
@@ -24,12 +26,16 @@
 							</div>
 							<div class="mr-2">0</div>
 						</div>
-						<div class="flex-auto flex flex-row-reverse items-center">
+						<div
+							class="flex-shrink-0 flex-grow-0 basis-auto flex flex-row-reverse items-center w-1/2"
+						>
 							<div class="w-[40px]">
 								<IConO></IConO>
 							</div>
-							<div class="flex-shrink text-lg flex-grow flex-col">
-								<span> Duy Khánh</span>
+							<div
+								class="min-w-0 flex-shrink text-lg flex flex-grow flex-col"
+							>
+								<span class="truncate"> Duy Khánh</span>
 							</div>
 							<div
 								class="relative inline-block h-12 w-12 mx-2 !rounded-full object-cover object-center"
