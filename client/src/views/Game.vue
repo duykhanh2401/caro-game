@@ -50,44 +50,46 @@
 					</div>
 				</div>
 			</div>
-			<div></div>
-			<div></div>
-			<!-- <div class="game">
-				<div class="board-wrapper">
-					<table
-						class="board"
-						@touchmove="onTouchMove"
-						@touchstart="onTouchMove"
-						@touchend="onTouchEnd"
-					>
-						<tbody>
-							<tr
-								v-for="(row, rowIndex) in getSplitDataArr()"
-								:key="rowIndex"
-							>
-								<td
-									v-for="(cell, cellIndex) in row"
-									:key="cellIndex"
-									:style="
-										getCellStyle(getBoardIndex(rowIndex, cellIndex))
-									"
-									:data-key="getBoardIndex(rowIndex, cellIndex)"
-									:data-value="cell || 'empty'"
-									class="cell"
-									:class="
-										getCellClassNames(
-											getBoardIndex(rowIndex, cellIndex),
-										)
-									"
+			<div class="overflow-auto h-0 flex flex-grow justify-center items-center">
+				<div class="game">
+					<div class="board-wrapper">
+						<table
+							class="board table-fixed"
+							@touchmove="onTouchMove"
+							@touchstart="onTouchMove"
+							@touchend="onTouchEnd"
+						>
+							<tbody>
+								<tr
+									v-for="(row, rowIndex) in getSplitDataArr()"
+									:key="rowIndex"
 								>
-									<IConX v-if="cell == 'x'" />
-									<IConO v-else-if="cell == 'o'" />
-								</td>
-							</tr>
-						</tbody>
-					</table>
+									<td
+										v-for="(cell, cellIndex) in row"
+										:key="cellIndex"
+										:data-key="getBoardIndex(rowIndex, cellIndex)"
+										:data-value="cell || 'empty'"
+										class="cell !w-[35px] !h-[35px] max-w-[35px] max-h-[35px] min-w-[35px] inline-block whitespace-nowrap overflow-hidden min-h-[35px]"
+										:class="
+											getCellClassNames(
+												getBoardIndex(rowIndex, cellIndex),
+											)
+										"
+									>
+										<IConX v-if="cell == 'x'" />
+										<IConO v-else-if="cell == 'o'" />
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 				</div>
-			</div> -->
+			</div>
+			<div class="h-[60px] flex px-4 flex-row items-center whitespace-nowrap">
+				<div>
+					<DKButton btnClass="btn-primary btn-sm">Huỷ bỏ ván chơi</DKButton>
+				</div>
+			</div>
 		</div>
 		<div class="col-span-2 hidden md:block"></div>
 	</div>
@@ -266,8 +268,7 @@ table {
 
 .board-wrapper {
 	position: relative;
-	width: 40em;
-	height: 40em;
+	width: 100%;
 
 	&.ended {
 		.board {
@@ -283,8 +284,6 @@ table {
 	}
 
 	.board {
-		width: 100%;
-		height: 100%;
 		margin: 0;
 		flex-wrap: wrap;
 		border-spacing: 0;
