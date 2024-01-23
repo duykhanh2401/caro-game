@@ -78,6 +78,7 @@ export default function useConnectGlobal() {
 					console.log('ws Connected');
 					console.log(res);
 					me.value = res.body.data;
+					currentRoom.value = undefined;
 					const username = window.localStorage.getItem('username');
 					if (username) {
 						changeUsername(username);
@@ -107,8 +108,9 @@ export default function useConnectGlobal() {
 						},
 					];
 					toast.success('Bạn đã tạo phòng thành công !!!');
+					break;
 				case ResponseEvents.ME_GET_ROOMS:
-					rooms.value = res.body.data;
+					rooms.value = res.body.value;
 			}
 		});
 	}

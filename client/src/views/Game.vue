@@ -9,12 +9,15 @@
 							class="flex-shrink-0 flex-grow-0 flex items-center basis-auto w-1/2"
 						>
 							<div class="w-[40px]">
-								<IConX></IConX>
+								<IConX v-if="currentRoom?.roomMasterFirst"></IConX>
+								<IConO v-else></IConO>
 							</div>
 							<div
 								class="text-right min-w-0 flex-shrink text-lg flex flex-grow flex-col"
 							>
-								<span class="truncate">Duy Khánh</span>
+								<span class="truncate">{{
+									currentRoom?.roomMaster
+								}}</span>
 							</div>
 							<div
 								class="relative inline-block h-12 w-12 mx-2 !rounded-full object-cover object-center"
@@ -30,7 +33,8 @@
 							class="flex-shrink-0 flex-grow-0 basis-auto flex flex-row-reverse items-center w-1/2"
 						>
 							<div class="w-[40px]">
-								<IConO></IConO>
+								<IConX v-if="!currentRoom?.roomMasterFirst"></IConX>
+								<IConO v-else></IConO>
 							</div>
 							<div
 								class="min-w-0 flex-shrink text-lg flex flex-grow flex-col"
@@ -98,9 +102,13 @@
 import { ref, getCurrentInstance } from 'vue';
 import IConX from '@/assets/icons/x_icon.svg';
 import IConO from '@/assets/icons/o_icon.svg';
+import useRoomState from '../composable/useRoomState';
 const data = ref<Array<String>>([]);
 const hoverCell = ref<number | null>();
 const gridCount = 15;
+
+const { currentRoom } = useRoomState();
+console.log(currentRoom.value);
 
 const listAvatarRandom = [
 	'Alligator',

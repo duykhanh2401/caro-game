@@ -6,12 +6,13 @@ export interface IRoom {
 	name: string;
 	master: string;
 	masterWin: number;
-	Guest: string;
-	GuestWin: number;
-	MasterFirst: boolean;
-	IsMasterTurn: boolean;
-	GuestReady: boolean;
-	MasterReady: boolean;
+	guest: string;
+	guestWin: number;
+	roomMasterFirst: boolean;
+	isMasterTurn: boolean;
+	guestReady: boolean;
+	masterReady: boolean;
+	roomMaster: string;
 }
 
 export interface IMessage {
