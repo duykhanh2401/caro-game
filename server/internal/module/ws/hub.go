@@ -293,10 +293,18 @@ func (h *Hub) createRoom(req *Request) {
 		return
 	}
 	fmt.Println("Create Room ID: ", roomID)
+
+	user, ok := h.user.Load(req.ClientID)
+	if !ok { // TODO: handle this more user friendly way
+		user.ID = "<removed>"
+		user.Username = "<removed>"
+	}
+
 	res := Response{
 		Body: map[string]interface{}{
 			"message": "Bạn đã tạo phòng với ID: " + roomID,
 			"room":    roomCreated,
+			"user":    user,
 		},
 		Type: ME_CREATED_ROOM,
 	}
