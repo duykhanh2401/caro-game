@@ -97,6 +97,8 @@ export default function useConnectGlobal() {
 					break;
 				case ResponseEvents.ME_CREATED_ROOM:
 					currentRoom.value = res.body.room;
+
+					users.value.push(res.body.user);
 					messages.value = [
 						...messages.value,
 						{
