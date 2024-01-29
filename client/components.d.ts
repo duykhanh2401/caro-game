@@ -14,6 +14,7 @@ declare module 'vue' {
     HandleMobileMenu: typeof import('./src/components/Header/NavTools/HandleMobileMenu.vue')['default']
     Header: typeof import('./src/components/Header/index.vue')['default']
     Icon: typeof import('./src/components/Icon/index.vue')['default']
+    Loading: typeof import('./src/components/Loading/index.vue')['default']
     MobileLogo: typeof import('./src/components/Header/NavTools/MobileLogo.vue')['default']
     MobileSidebar: typeof import('./src/components/SideBar/MobileSidebar.vue')['default']
     Modal: typeof import('./src/components/Modal/index.vue')['default']

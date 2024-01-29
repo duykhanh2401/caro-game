@@ -21,6 +21,8 @@ enum ResponseEvents {
 	OTHER_MESSAGE_SEND,
 	OLD_MESSAGES,
 	ME_CREATED_ROOM,
+	GUEST_LEAVE_ROOM,
+	ME_TO_ROOM_MASTER,
 }
 
 enum RequestEvents {
@@ -112,7 +114,21 @@ export default function useConnectGlobal() {
 					toast.success('Bạn đã tạo phòng thành công !!!');
 					break;
 				case ResponseEvents.ME_GET_ROOMS:
-					rooms.value = res.body.value;
+					rooms.value = res.body.data;
+					break;
+				case ResponseEvents.ME_JOINED_CHAT:
+					currentRoom.value = res.body.data.room;
+					users.value.push(...res.body.data.user);
+
+					break;
+				case ResponseEvents.OTHER_JOINED_CHAT:
+					currentRoom.value = res.body.data.room;
+					users.value.push(res.body.data.user);
+					break;
+				case ResponseEvents.GUEST_LEAVE_ROOM:
+					toast.info(res.body.message);
+					currentRoom.value = res.body.room;
+					break;
 			}
 		});
 	}
@@ -172,12 +188,26 @@ export default function useConnectGlobal() {
 			);
 		} catch (error) {}
 	}
+	function joinRoom(roomID: string) {
+		if (!roomID) return;
+		try {
+			ws.value?.send(
+				JSON.stringify({
+					type: RequestEvents.JOIN_ROOM,
+					body: {
+						roomID,
+					},
+				}),
+			);
+		} catch (error) {}
+	}
 
 	return {
 		connectServer,
 		changeUsername,
 		createRoom,
 		getRooms,
+		joinRoom,
 		ws,
 		url,
 		me,

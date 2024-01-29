@@ -341,7 +341,50 @@ func (h *Hub) leaveRoom(req *Request) {
 		}
 	}
 
+	room, ok := h.room.Room(roomID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+		return
+	}
 	h.room.Leave(roomID, req.ClientID)
+	newRoom, ok := h.room.Room(roomID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+	}
+
+	if room.Guest == req.ClientID {
+		res := Response{
+			Body: map[string]interface{}{
+				"message": "Đối thủ đã rời khỏi phòng !",
+				"room":    newRoom,
+			},
+			Type: GUEST_LEAVE_ROOM,
+		}
+
+		if c, ok := h.connection.Load(room.Master); ok {
+			if err := c.WriteJSON(res); err != nil {
+				if e := h.error(c, ErrServerError); e != nil {
+					h.unregister(c)
+				}
+			}
+		}
+	} else if room.Guest == req.ClientID && room.Guest != "" {
+		res := Response{
+			Body: map[string]interface{}{
+				"message": "Đối thủ đã rời khỏi phòng !",
+				"room":    newRoom,
+			},
+			Type: GUEST_LEAVE_ROOM,
+		}
+
+		if c, ok := h.connection.Load(room.Guest); ok {
+			if err := c.WriteJSON(res); err != nil {
+				if e := h.error(c, ErrServerError); e != nil {
+					h.unregister(c)
+				}
+			}
+		}
+	}
 
 }
 
@@ -453,6 +496,8 @@ func (h *Hub) getRooms(client *Client) {
 		Type: ME_GET_ROOMS,
 	}
 
+	fmt.Println("Data GetRoom: ", rooms)
+
 	if err := client.WriteJSON(res); err != nil {
 		if e := h.error(client, ErrServerError); e != nil {
 			h.unregister(client)
@@ -469,6 +514,7 @@ func (h *Hub) joinRoom(req *Request) {
 		h.unregister(conn)
 	}
 
+	fmt.Println(req.Body)
 	var roomID string
 	{
 		if tmp, ok := req.Body["roomID"]; ok {
@@ -498,6 +544,7 @@ func (h *Hub) joinRoom(req *Request) {
 		h.error(conn, ErrNotFound)
 		return
 	}
+
 	fmt.Println("Load Room")
 
 	// Load Room
@@ -505,12 +552,19 @@ func (h *Hub) joinRoom(req *Request) {
 	if !ok {
 		h.error(conn, ErrNotFound)
 	}
+
+	otherUser, ok := h.user.Load(room.Master)
+	if !ok {
+		h.error(conn, ErrNotFound)
+		return
+	}
 	fmt.Println("Send Response")
 	res := Response{
 		Body: map[string]interface{}{
 			"message": "Bạn đã tham gia vào phòng : " + roomID,
 			"data": map[string]interface{}{
 				"room": room,
+				"user": []User{otherUser, user},
 			},
 		},
 		Type: ME_JOINED_CHAT,
@@ -525,7 +579,10 @@ func (h *Hub) joinRoom(req *Request) {
 
 	res.Body = map[string]interface{}{
 		"message": "Có người chơi mới tham gia phòng",
-		"data":    user,
+		"data": map[string]interface{}{
+			"room": room,
+			"user": user,
+		},
 	}
 	res.Type = OTHER_JOINED_CHAT
 
@@ -562,7 +619,13 @@ func (h *Hub) unregister(conn *Client) {
 		}
 	}
 
-	h.room.Leave(roomID, clientID) // TODO: find a better way to handle unknown roomId situation
+	req := &Request{
+		Body: map[string]interface{}{
+			"roomID": roomID,
+		},
+		ClientID: clientID,
+	}
+	h.leaveRoom(req)
 	// Delete connection
 	h.connection.Delete(clientID)
 	// Delete user

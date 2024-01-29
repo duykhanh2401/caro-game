@@ -22,6 +22,8 @@ const (
 	OTHER_MESSAGE_SEND
 	OLD_MESSAGES
 	ME_CREATED_ROOM
+	GUEST_LEAVE_ROOM
+	ME_TO_ROOM_MASTER
 )
 
 func (t ResponseType) String() string {

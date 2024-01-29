@@ -135,6 +135,7 @@
 					<button
 						type="button"
 						class="flex items-center gap-x-2 text-gray-500 hover:text-blue-500 whitespace-nowrap"
+						@click="joinRoom(room.id)"
 					>
 						Vào phòng
 					</button>
@@ -154,7 +155,7 @@ import useConnectGlobal from '../composable/useConnectGlobal';
 const openCreateRoom = ref(false);
 const openJoinRoom = ref(false);
 const openListRoom = ref(false);
-const { createRoom, me, getRooms } = useConnectGlobal();
+const { createRoom, me, getRooms, joinRoom } = useConnectGlobal();
 const { rooms } = useRoomState();
 
 const pincode = ref('');
