@@ -124,6 +124,8 @@ export default function useConnectGlobal() {
 				case ResponseEvents.OTHER_JOINED_CHAT:
 					currentRoom.value = res.body.data.room;
 					users.value.push(res.body.data.user);
+					toast.info(res.body.message);
+
 					break;
 				case ResponseEvents.GUEST_LEAVE_ROOM:
 					toast.info(res.body.message);

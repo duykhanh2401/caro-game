@@ -368,7 +368,7 @@ func (h *Hub) leaveRoom(req *Request) {
 				}
 			}
 		}
-	} else if room.Guest == req.ClientID && room.Guest != "" {
+	} else if room.Master == req.ClientID && room.Guest != "" {
 		res := Response{
 			Body: map[string]interface{}{
 				"message": "Đối thủ đã rời khỏi phòng !",
