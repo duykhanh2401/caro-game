@@ -3,7 +3,7 @@ import Toast, { POSITION, type PluginOptions } from 'vue-toastification';
 import 'vue-toastification/dist/index.css';
 
 const options: PluginOptions = {
-	timeout: 3500,
+	timeout: 2000,
 	closeOnClick: true,
 	pauseOnFocusLoss: false,
 	pauseOnHover: true,
@@ -14,7 +14,7 @@ const options: PluginOptions = {
 	closeButton: 'button',
 	icon: true,
 	rtl: false,
-	position: POSITION.TOP_RIGHT,
+	position: POSITION.TOP_CENTER,
 };
 
 export function InitToast(app: App<Element>) {
