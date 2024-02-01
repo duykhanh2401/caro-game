@@ -42,7 +42,9 @@
 								<span class="truncate" v-if="GetGuestName()">{{
 									GetGuestName()?.username
 								}}</span>
-								<span v-else class="loading"> Đang chờ đối thủ </span>
+								<span v-else class="loading truncate">
+									Đang chờ đối thủ
+								</span>
 							</div>
 							<div
 								class="relative inline-block h-12 w-12 mx-2 !rounded-full object-cover object-center"
@@ -57,11 +59,11 @@
 					</div>
 				</div>
 			</div>
-			<div class="overflow-auto h-0 flex flex-grow justify-center items-center">
+			<div class="overflow-auto py-4 flex flex-grow justify-center items-center">
 				<div class="game">
 					<div class="board-wrapper">
 						<table
-							class="board table-fixed"
+							class="board"
 							@touchmove="onTouchMove"
 							@touchstart="onTouchMove"
 							@touchend="onTouchEnd"
@@ -74,9 +76,14 @@
 									<td
 										v-for="(cell, cellIndex) in row"
 										:key="cellIndex"
+										:style="
+											getCellStyle(
+												getBoardIndex(rowIndex, cellIndex),
+											)
+										"
 										:data-key="getBoardIndex(rowIndex, cellIndex)"
 										:data-value="cell || 'empty'"
-										class="cell !w-[35px] !h-[35px] max-w-[35px] max-h-[35px] min-w-[35px] inline-block whitespace-nowrap overflow-hidden min-h-[35px]"
+										class="cell"
 										:class="
 											getCellClassNames(
 												getBoardIndex(rowIndex, cellIndex),
@@ -109,7 +116,7 @@ import useRoomState from '../composable/useRoomState';
 import useUserState, { type IUser } from '../composable/useUserState';
 const data = ref<Array<String>>([]);
 const hoverCell = ref<number | null>();
-const gridCount = 15;
+const gridCount = 13;
 
 const { currentRoom } = useRoomState();
 const { users } = useUserState();
@@ -246,7 +253,6 @@ const getCellClassNames = (index: number) => {
 const onTouchMove = (e) => {
 	const { clientX, clientY } = e.touches[0];
 	const el = document.elementFromPoint(clientX, clientY) as HTMLElement;
-	console.log(el?.dataset.key);
 	if (el?.dataset.key) {
 		hoverCell.value = el?.classList.contains('cell') ? +el?.dataset.key : null;
 	}
@@ -280,6 +286,11 @@ table {
 	border-collapse: separate;
 }
 
+.dark .cell {
+	background-color: #1e293b;
+	border: 1.5px solid #0f172a;
+}
+
 .game {
 	height: 100%;
 	display: flex;
@@ -292,7 +303,8 @@ table {
 
 .board-wrapper {
 	position: relative;
-	width: 100%;
+	width: 40em;
+	height: 40em;
 
 	&.ended {
 		.board {
@@ -308,6 +320,8 @@ table {
 	}
 
 	.board {
+		width: 100%;
+		height: 100%;
 		margin: 0;
 		flex-wrap: wrap;
 		border-spacing: 0;
@@ -334,11 +348,6 @@ table {
 			user-select: none;
 		}
 	}
-}
-
-.dark .cell {
-	background-color: #1e293b;
-	border: 1.5px solid #0f172a;
 }
 
 .cell {
