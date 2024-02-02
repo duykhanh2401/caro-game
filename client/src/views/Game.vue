@@ -107,6 +107,57 @@
 		</div>
 		<div class="col-span-2 hidden md:block"></div>
 	</div>
+	<DKModal
+		:isOpen="
+			currentRoom?.guest != '' &&
+			currentRoom?.roomMaster != '' &&
+			!currentRoom?.guestReady &&
+			!currentRoom?.masterReady
+		"
+		:centered="true"
+		title="Sẵn Sàng"
+	>
+		<div class="flex justify-around">
+			<div class="w-1/2 flex flex-col items-center">
+				<div>
+					<span class="truncate">{{ GetMasterName()?.username }}</span>
+				</div>
+				<DKButton v-if="isMaster()" class="mt-2" btnClass="btn-primary btn-sm">{{
+					currentRoom?.guestReady ? 'Huỷ sẵn sàng' : 'Sẵn sàng'
+				}}</DKButton>
+				<DKButton
+					v-else
+					isDisabled
+					class="mt-2"
+					btnClass="btn-primary btn-sm loading"
+					>{{
+						currentRoom?.guestReady
+							? 'Người chơi đã sẵn sàng'
+							: 'Đang đợi người chơi sẵn sàng'
+					}}</DKButton
+				>
+			</div>
+			<div class="w-1/2 flex flex-col items-center">
+				<div>
+					<span class="truncate">{{ GetGuestName()?.username }}</span>
+				</div>
+				<DKButton v-if="!isMaster()" class="mt-2" btnClass="btn-primary btn-sm">{{
+					currentRoom?.guestReady ? 'Huỷ sẵn sàng' : 'Sẵn sàng'
+				}}</DKButton>
+				<DKButton
+					v-else
+					isDisabled
+					class="mt-2"
+					btnClass="btn-primary btn-sm loading"
+					>{{
+						currentRoom?.guestReady
+							? 'Người chơi đã sẵn sàng'
+							: 'Đang đợi người chơi sẵn sàng'
+					}}</DKButton
+				>
+			</div>
+		</div>
+	</DKModal>
 </template>
 <script setup lang="ts">
 import { ref, getCurrentInstance } from 'vue';
@@ -119,7 +170,16 @@ const hoverCell = ref<number | null>();
 const gridCount = 13;
 
 const { currentRoom } = useRoomState();
-const { users } = useUserState();
+const { users, me } = useUserState();
+console.log(currentRoom.value);
+
+function isMaster(): boolean {
+	if (currentRoom.value?.roomMaster == me.value.id) {
+		return true;
+	}
+
+	return false;
+}
 
 function GetMasterName(): IUser | undefined {
 	return users.value?.find((user) => {

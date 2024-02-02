@@ -37,6 +37,8 @@ type RoomStore interface {
 	Room(roomID string) (room Room, ok bool)
 	Rooms(includeUserRoom ...bool) []Room
 	UserJoinedTo(userID string) (room Room, ok bool)
+	GuestReady(roomID string, isReady bool) bool
+	MasterReady(roomID string, isReady bool) bool
 }
 
 func NewInMemoryRoomStore() *InMemoryRoomStore {
@@ -112,6 +114,38 @@ func (r *InMemoryRoomStore) Join(roomID string, userID string) bool {
 		r.Unlock()
 		r.ResetDataCaro(roomID)
 	}
+	return ok
+}
+
+func (r *InMemoryRoomStore) GuestReady(roomID string, isReady bool) bool {
+	r.Lock()
+	_, ok := r.rooms[roomID]
+	r.Unlock()
+
+	if ok {
+		r.Lock()
+		room := r.rooms[roomID]
+		room.GuestReady = isReady
+		r.rooms[roomID] = room
+		r.Unlock()
+	}
+
+	return ok
+}
+
+func (r *InMemoryRoomStore) MasterReady(roomID string, isReady bool) bool {
+	r.Lock()
+	_, ok := r.rooms[roomID]
+	r.Unlock()
+
+	if ok {
+		r.Lock()
+		room := r.rooms[roomID]
+		room.MasterReady = isReady
+		r.rooms[roomID] = room
+		r.Unlock()
+	}
+
 	return ok
 }
 

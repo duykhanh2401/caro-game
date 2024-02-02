@@ -36,6 +36,8 @@ type Hub struct {
 	SendMessage    chan *Request
 	CreateRoom     chan *Request
 	ChangeUserName chan *Request
+	GuestReady     chan *Request
+	MasterReady    chan *Request
 	Options        *HubOptions
 	connection     ConnectionStore
 	room           RoomStore
@@ -75,6 +77,8 @@ func NewHub() *Hub {
 		SendMessage:    make(chan *Request),
 		CreateRoom:     make(chan *Request),
 		ChangeUserName: make(chan *Request),
+		GuestReady:     make(chan *Request),
+		MasterReady:    make(chan *Request),
 	}
 }
 
@@ -595,6 +599,61 @@ func (h *Hub) joinRoom(req *Request) {
 			}
 		}
 	}
+}
+
+func (h *Hub) guestReady(req *Request) {
+	fmt.Println("Guest Ready !!!")
+	conn, ok := h.connection.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+	}
+
+	var roomID string
+	{
+		if tmp, ok := req.Body["roomID"]; ok {
+			if s, ok := tmp.(string); ok {
+				roomID = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	room, ok := h.room.Room(roomID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+	}
+
+	if room.Guest != req.ClientID {
+		h.error(conn, errors.New("Bạn không có quyền trong phòng này"))
+		return
+	}
+
+	var isReady bool
+	{
+		if tmp, ok := req.Body["isReady"]; ok {
+			if s, ok := tmp.(bool); ok {
+				isReady = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	if ok := h.room.GuestReady(roomID, isReady); !ok {
+		h.error(conn, ErrServerError)
+		return
+	}
+
 }
 
 func (h *Hub) unregister(conn *Client) {

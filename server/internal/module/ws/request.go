@@ -17,6 +17,8 @@ const (
 	SEND_MESSAGE
 	GET_OLD_MESSAGES
 	CREATE_ROOM
+	GUEST_READY
+	MASTER_READY
 )
 
 func (t RequestType) String() string {
