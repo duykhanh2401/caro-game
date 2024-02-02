@@ -30,5 +30,7 @@ func (t RequestType) String() string {
 		"SEND_MESSAGE",
 		"GET_OLD_MESSAGES",
 		"CREATE_ROOM",
+		"GUEST_READY",
+		"MASTER_READY",
 	}[t]
 }

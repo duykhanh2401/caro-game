@@ -24,6 +24,8 @@ const (
 	ME_CREATED_ROOM
 	GUEST_LEAVE_ROOM
 	ME_TO_ROOM_MASTER
+	GUEST_READY_RESPONSE
+	MASTER_READY_RESPONSE
 )
 
 func (t ResponseType) String() string {
@@ -39,6 +41,9 @@ func (t ResponseType) String() string {
 		"OTHER_LEFT_ROOM",
 		"ME_MESSAGE_SEND",
 		"OTHER_MESSAGE_SEND",
-		"OLD_MESSAGES", "ME_CREATED_ROOM",
+		"OLD_MESSAGES",
+		"ME_CREATED_ROOM",
+		"GUEST_READY_RESPONSE",
+		"MASTER_READY_RESPONSE",
 	}[t]
 }

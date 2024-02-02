@@ -59,7 +59,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="overflow-auto py-4 flex flex-grow justify-center items-center">
+			<div class="flex py-4 flex-grow justify-center items-center">
 				<div class="game">
 					<div class="board-wrapper">
 						<table
@@ -101,7 +101,11 @@
 			</div>
 			<div class="h-[60px] flex px-4 flex-row items-center whitespace-nowrap">
 				<div>
-					<DKButton btnClass="btn-primary btn-sm">Huỷ bỏ ván chơi</DKButton>
+					<DKButton
+						btnClass="btn-primary btn-sm"
+						@click="leaveRoom(currentRoom?.id)"
+						>Huỷ bỏ ván chơi</DKButton
+					>
 				</div>
 			</div>
 		</div>
@@ -111,8 +115,7 @@
 		:isOpen="
 			currentRoom?.guest != '' &&
 			currentRoom?.roomMaster != '' &&
-			!currentRoom?.guestReady &&
-			!currentRoom?.masterReady
+			(currentRoom?.guestReady == false || currentRoom?.masterReady == false)
 		"
 		:centered="true"
 		title="Sẵn Sàng"
@@ -122,16 +125,23 @@
 				<div>
 					<span class="truncate">{{ GetMasterName()?.username }}</span>
 				</div>
-				<DKButton v-if="isMaster()" class="mt-2" btnClass="btn-primary btn-sm">{{
-					currentRoom?.guestReady ? 'Huỷ sẵn sàng' : 'Sẵn sàng'
-				}}</DKButton>
+				<DKButton
+					v-if="isMaster()"
+					class="mt-2"
+					btnClass="btn-primary btn-sm"
+					@click="masterReady(!currentRoom?.masterReady)"
+					>{{
+						currentRoom?.masterReady ? 'Huỷ sẵn sàng' : 'Sẵn sàng'
+					}}</DKButton
+				>
 				<DKButton
 					v-else
 					isDisabled
 					class="mt-2"
-					btnClass="btn-primary btn-sm loading"
+					:class="!currentRoom?.masterReady && `loading`"
+					btnClass="btn-primary btn-sm"
 					>{{
-						currentRoom?.guestReady
+						currentRoom?.masterReady
 							? 'Người chơi đã sẵn sàng'
 							: 'Đang đợi người chơi sẵn sàng'
 					}}</DKButton
@@ -141,14 +151,19 @@
 				<div>
 					<span class="truncate">{{ GetGuestName()?.username }}</span>
 				</div>
-				<DKButton v-if="!isMaster()" class="mt-2" btnClass="btn-primary btn-sm">{{
-					currentRoom?.guestReady ? 'Huỷ sẵn sàng' : 'Sẵn sàng'
-				}}</DKButton>
+				<DKButton
+					v-if="!isMaster()"
+					class="mt-2"
+					btnClass="btn-primary btn-sm"
+					@click="guestReady(!currentRoom?.guestReady)"
+					>{{ currentRoom?.guestReady ? 'Huỷ sẵn sàng' : 'Sẵn sàng' }}</DKButton
+				>
 				<DKButton
 					v-else
 					isDisabled
 					class="mt-2"
-					btnClass="btn-primary btn-sm loading"
+					:class="!currentRoom?.guestReady && `loading`"
+					btnClass="btn-primary btn-sm "
 					>{{
 						currentRoom?.guestReady
 							? 'Người chơi đã sẵn sàng'
@@ -156,6 +171,14 @@
 					}}</DKButton
 				>
 			</div>
+		</div>
+		<div class="flex justify-center mt-5">
+			<DKButton
+				class="mt-2"
+				@click="leaveRoom(currentRoom?.id)"
+				btnClass="btn-primary btn-sm"
+				>Rời phòng</DKButton
+			>
 		</div>
 	</DKModal>
 </template>
@@ -165,13 +188,14 @@ import IConX from '@/assets/icons/x_icon.svg';
 import IConO from '@/assets/icons/o_icon.svg';
 import useRoomState from '../composable/useRoomState';
 import useUserState, { type IUser } from '../composable/useUserState';
+import useConnectGlobal from '../composable/useConnectGlobal';
 const data = ref<Array<String>>([]);
 const hoverCell = ref<number | null>();
 const gridCount = 13;
 
 const { currentRoom } = useRoomState();
 const { users, me } = useUserState();
-console.log(currentRoom.value);
+const { leaveRoom, guestReady, masterReady } = useConnectGlobal();
 
 function isMaster(): boolean {
 	if (currentRoom.value?.roomMaster == me.value.id) {
@@ -192,79 +216,6 @@ function GetGuestName(): IUser | undefined {
 		return user.id == currentRoom.value?.guest;
 	});
 }
-
-const listAvatarRandom = [
-	'Alligator',
-	'Chipmunk',
-	'Gopher',
-	'Liger',
-	'Quagga',
-	'Anteater',
-	'Chupacabra',
-	'Grizzly',
-	'Llama',
-	'Rabbit',
-	'Armadillo',
-	'Cormorant',
-	'Hedgehog',
-	'Manatee',
-	'Raccoon',
-	'Auroch',
-	'Coyote',
-	'Hippo',
-	'Mink',
-	'Rhino',
-	'Axolotl',
-	'Crow',
-	'Hyena',
-	'Monkey',
-	'Sheep',
-	'Badger',
-	'Dingo',
-	'Ibex',
-	'Moose',
-	'Shrew',
-	'Bat',
-	'Dinosaur',
-	'Ifrit',
-	'Narwhal',
-	'Skunk',
-	'Beaver',
-	'Dolphin',
-	'Iguana',
-	'Orangutan',
-	'Squirrel',
-	'Buffalo',
-	'Duck',
-	'Jackal',
-	'Otter',
-	'Tiger',
-	'Camel',
-	'Elephant',
-	'Kangaroo',
-	'Panda',
-	'Turtle',
-	'Capybara',
-	'Ferret',
-	'Koala',
-	'Penguin',
-	'Walrus',
-	'Chameleon',
-	'Fox',
-	'Kraken',
-	'Platypus',
-	'Wolf',
-	'Cheetah',
-	'Frog',
-	'Lemur',
-	'Pumpkin',
-	'Wolverine',
-	'Chinchilla',
-	'Giraffe',
-	'Leopard',
-	'Python',
-	'Wombat',
-];
 
 function getRandomAvatar(): string {
 	return (
@@ -340,6 +291,78 @@ const onTouchEnd = (e) => {
 const getBoardIndex = (rowIndex, cellIndex) => rowIndex * gridCount + cellIndex;
 
 reset();
+const listAvatarRandom = [
+	'Alligator',
+	'Chipmunk',
+	'Gopher',
+	'Liger',
+	'Quagga',
+	'Anteater',
+	'Chupacabra',
+	'Grizzly',
+	'Llama',
+	'Rabbit',
+	'Armadillo',
+	'Cormorant',
+	'Hedgehog',
+	'Manatee',
+	'Raccoon',
+	'Auroch',
+	'Coyote',
+	'Hippo',
+	'Mink',
+	'Rhino',
+	'Axolotl',
+	'Crow',
+	'Hyena',
+	'Monkey',
+	'Sheep',
+	'Badger',
+	'Dingo',
+	'Ibex',
+	'Moose',
+	'Shrew',
+	'Bat',
+	'Dinosaur',
+	'Ifrit',
+	'Narwhal',
+	'Skunk',
+	'Beaver',
+	'Dolphin',
+	'Iguana',
+	'Orangutan',
+	'Squirrel',
+	'Buffalo',
+	'Duck',
+	'Jackal',
+	'Otter',
+	'Tiger',
+	'Camel',
+	'Elephant',
+	'Kangaroo',
+	'Panda',
+	'Turtle',
+	'Capybara',
+	'Ferret',
+	'Koala',
+	'Penguin',
+	'Walrus',
+	'Chameleon',
+	'Fox',
+	'Kraken',
+	'Platypus',
+	'Wolf',
+	'Cheetah',
+	'Frog',
+	'Lemur',
+	'Pumpkin',
+	'Wolverine',
+	'Chinchilla',
+	'Giraffe',
+	'Leopard',
+	'Python',
+	'Wombat',
+];
 </script>
 <style lang="scss">
 table {
@@ -353,6 +376,8 @@ table {
 
 .game {
 	height: 100%;
+	aspect-ratio: 1 / 1;
+	max-height: 80vw;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -363,8 +388,9 @@ table {
 
 .board-wrapper {
 	position: relative;
-	width: 40em;
-	height: 40em;
+	aspect-ratio: 1 / 1;
+	height: 100%;
+	max-width: 100%;
 
 	&.ended {
 		.board {

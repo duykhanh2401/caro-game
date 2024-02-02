@@ -173,7 +173,8 @@ func (r *InMemoryRoomStore) Leave(roomID string, userID string) {
 			room.MasterWin = 0
 			room.MasterFirst = true
 			room.IsMasterTurn = true
-
+			room.GuestReady = false
+			room.MasterReady = false
 			if room.Guest == userID {
 				room.Guest = ""
 			} else if room.Master == userID && room.Guest == "" {

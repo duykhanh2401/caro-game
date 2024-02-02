@@ -113,6 +113,18 @@ func (h *Hub) Run() {
 			{
 				h.sendMessage(req)
 			}
+		case req := <-h.LeaveRoom:
+			{
+				h.leaveRoom(req)
+			}
+		case req := <-h.GuestReady:
+			{
+				h.guestReady(req)
+			}
+		case req := <-h.MasterReady:
+			{
+				h.masterReady(req)
+			}
 		}
 
 	}
@@ -155,6 +167,7 @@ func (h *Hub) Handler() gin.HandlerFunc {
 				request.ID = GetRandomID()
 				request.ClientID = clientID
 				fmt.Println("Request: ", request)
+				fmt.Println("Type: ", request.Type)
 				switch request.Type {
 				case CREATE_ROOM:
 					{
@@ -176,6 +189,18 @@ func (h *Hub) Handler() gin.HandlerFunc {
 				case GET_ROOMS:
 					{
 						h.GetRooms <- client
+					}
+				case LEFT_ROOM:
+					{
+						h.LeaveRoom <- &request
+					}
+				case GUEST_READY:
+					{
+						h.GuestReady <- &request
+					}
+				case MASTER_READY:
+					{
+						h.MasterReady <- &request
 					}
 				}
 			}
@@ -356,6 +381,20 @@ func (h *Hub) leaveRoom(req *Request) {
 		h.error(conn, ErrNotFound)
 	}
 
+	res := Response{
+		Body: map[string]interface{}{
+			"message": "Bạn đã rời khởi phòng",
+		},
+		Type: ME_LEFT_ROOM,
+	}
+
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+			// return
+		}
+	}
+
 	if room.Guest == req.ClientID {
 		res := Response{
 			Body: map[string]interface{}{
@@ -372,6 +411,7 @@ func (h *Hub) leaveRoom(req *Request) {
 				}
 			}
 		}
+
 	} else if room.Master == req.ClientID && room.Guest != "" {
 		res := Response{
 			Body: map[string]interface{}{
@@ -654,6 +694,109 @@ func (h *Hub) guestReady(req *Request) {
 		return
 	}
 
+	res := Response{
+		Body: map[string]interface{}{
+			"isReady": isReady,
+		},
+		Type: GUEST_READY_RESPONSE,
+	}
+
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+		}
+	}
+
+	conn, ok = h.connection.Load(room.Master)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+	}
+
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+		}
+	}
+}
+
+func (h *Hub) masterReady(req *Request) {
+	fmt.Println("Master Ready !!!")
+	conn, ok := h.connection.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+	}
+
+	var roomID string
+	{
+		if tmp, ok := req.Body["roomID"]; ok {
+			if s, ok := tmp.(string); ok {
+				roomID = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	room, ok := h.room.Room(roomID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+	}
+
+	if room.Master != req.ClientID {
+		h.error(conn, errors.New("Bạn không có quyền trong phòng này"))
+		return
+	}
+
+	var isReady bool
+	{
+		if tmp, ok := req.Body["isReady"]; ok {
+			if s, ok := tmp.(bool); ok {
+				isReady = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	if ok := h.room.GuestReady(roomID, isReady); !ok {
+		h.error(conn, ErrServerError)
+		return
+	}
+
+	res := Response{
+		Body: map[string]interface{}{
+			"isReady": isReady,
+		},
+		Type: MASTER_READY_RESPONSE,
+	}
+
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+		}
+	}
+
+	conn, ok = h.connection.Load(room.Guest)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+	}
+
+	if err := conn.WriteJSON(res); err != nil {
+		if e := h.error(conn, ErrServerError); e != nil {
+			h.unregister(conn)
+		}
+	}
 }
 
 func (h *Hub) unregister(conn *Client) {

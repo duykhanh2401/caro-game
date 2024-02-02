@@ -23,6 +23,8 @@ enum ResponseEvents {
 	ME_CREATED_ROOM,
 	GUEST_LEAVE_ROOM,
 	ME_TO_ROOM_MASTER,
+	GUEST_READY_RESPONSE,
+	MASTER_READY_RESPONSE,
 }
 
 enum RequestEvents {
@@ -33,6 +35,8 @@ enum RequestEvents {
 	SEND_MESSAGE,
 	GET_OLD_MESSAGES,
 	CREATE_ROOM,
+	GUEST_READY,
+	MASTER_READY,
 }
 
 export default function useConnectGlobal() {
@@ -70,6 +74,7 @@ export default function useConnectGlobal() {
 		});
 
 		ws.addEventListener('message', (e) => {
+			console.log('Current Room: ', currentRoom.value);
 			const res = JSON.parse(e.data);
 			switch (res.type) {
 				case ResponseEvents.ERROR:
@@ -131,6 +136,24 @@ export default function useConnectGlobal() {
 					toast.info(res.body.message);
 					currentRoom.value = res.body.room;
 					break;
+				case ResponseEvents.ME_LEFT_ROOM:
+					toast.info(res.body.message);
+					currentRoom.value = undefined;
+					break;
+				case ResponseEvents.GUEST_READY_RESPONSE:
+					console.log('GUEST READY !!!!!');
+
+					if (currentRoom.value) {
+						currentRoom.value.guestReady = res.body.isReady || false;
+					}
+					break;
+				case ResponseEvents.MASTER_READY_RESPONSE:
+					console.log('MASTER READY !!!!!');
+
+					if (currentRoom.value) {
+						currentRoom.value.masterReady = res.body.isReady || false;
+					}
+					break;
 			}
 		});
 	}
@@ -180,16 +203,20 @@ export default function useConnectGlobal() {
 		}
 	}
 
-	function leaveRoom(roomID: string) {
+	function leaveRoom(roomID?: string) {
 		if (!roomID) return;
 		try {
 			ws.value?.send(
 				JSON.stringify({
 					type: RequestEvents.LEFT_ROOM,
+					body: {
+						roomID,
+					},
 				}),
 			);
 		} catch (error) {}
 	}
+
 	function joinRoom(roomID: string) {
 		if (!roomID) return;
 		try {
@@ -204,12 +231,43 @@ export default function useConnectGlobal() {
 		} catch (error) {}
 	}
 
+	function guestReady(ready: boolean) {
+		try {
+			ws.value?.send(
+				JSON.stringify({
+					type: RequestEvents.GUEST_READY,
+					body: {
+						roomID: currentRoom.value?.id,
+						isReady: ready,
+					},
+				}),
+			);
+		} catch (error) {}
+	}
+
+	function masterReady(ready: boolean) {
+		try {
+			ws.value?.send(
+				JSON.stringify({
+					type: RequestEvents.MASTER_READY,
+					body: {
+						roomID: currentRoom.value?.id,
+						isReady: ready,
+					},
+				}),
+			);
+		} catch (error) {}
+	}
+
 	return {
 		connectServer,
 		changeUsername,
 		createRoom,
 		getRooms,
 		joinRoom,
+		leaveRoom,
+		guestReady,
+		masterReady,
 		ws,
 		url,
 		me,
