@@ -184,7 +184,7 @@
 	</DKModal>
 </template>
 <script setup lang="ts">
-import { ref, getCurrentInstance } from 'vue';
+import { ref, getCurrentInstance, onMounted } from 'vue';
 import IConX from '@/assets/icons/x_icon.svg';
 import IConO from '@/assets/icons/o_icon.svg';
 import useRoomState from '../composable/useRoomState';
@@ -192,7 +192,7 @@ import useUserState, { type IUser } from '../composable/useUserState';
 import useConnectGlobal from '../composable/useConnectGlobal';
 const data = ref<Array<String>>([]);
 const hoverCell = ref<number | null>();
-const gridCount = 13;
+const gridCount = 16;
 
 const { currentRoom } = useRoomState();
 const { users, me } = useUserState();
@@ -221,6 +221,8 @@ function GetGuestName(): IUser | undefined {
 }
 
 function getRandomAvatar(): string {
+	console.log('Get Random avt');
+
 	return (
 		'https://anonymous-animals.azurewebsites.net/avatar/' +
 		listAvatarRandom[Math.floor(Math.random() * listAvatarRandom.length)]
@@ -241,12 +243,11 @@ const getCellStyle = (index) => {
 	const styles = {
 		height: `${100 / gridCount}%`,
 		width: `${100 / gridCount}%`,
-		backgroundColor: '',
 	};
 
-	if (index == currentClick.value) {
-		styles.backgroundColor = '#ccc';
-	}
+	// if (index == currentClick.value) {
+	// 	styles.backgroundColor = '#ccc';
+	// }
 
 	// if (winnerRow) {
 	//     const winIndex = winnerRow.findIndex(i => i === index);
@@ -269,16 +270,15 @@ const getCellClassNames = (index: number) => {
 		hovered: index === hoverCell.value,
 		highlighted: Number.isInteger(hoverCell.value) && (sameRow || sameColumn),
 		// victorious: winnerRow?.includes(index),
+		clicked: String(index) == currentClick.value,
 	};
 };
 
 const onClick = (e) => {
-	const { clientX, clientY } = e.changedTouches[0];
-	const el = document.elementFromPoint(clientX, clientY) as HTMLElement;
-	const index = el?.dataset.key;
+	console.log(e.target.dataset);
 
-	if (e.classList.contains('cell') && e.dataset.value == 'empty') {
-		currentClick.value = index || null;
+	if (e.target.classList.contains('cell') && e.target.dataset.value == 'empty') {
+		currentClick.value = e.target.dataset.key;
 	}
 };
 
@@ -393,6 +393,14 @@ table {
 .dark .cell {
 	background-color: #1e293b;
 	border: 1.5px solid #0f172a;
+}
+
+.clicked {
+	background-color: #eceff2 !important;
+}
+
+.dark .clicked {
+	background-color: #384455 !important;
 }
 
 .game {
