@@ -64,6 +64,7 @@
 					<div class="board-wrapper">
 						<table
 							class="board"
+							@click="onClick"
 							@touchmove="onTouchMove"
 							@touchstart="onTouchMove"
 							@touchend="onTouchEnd"
@@ -197,6 +198,8 @@ const { currentRoom } = useRoomState();
 const { users, me } = useUserState();
 const { leaveRoom, guestReady, masterReady } = useConnectGlobal();
 
+const currentClick = ref<string | null>();
+
 function isMaster(): boolean {
 	if (currentRoom.value?.roomMaster == me.value.id) {
 		return true;
@@ -235,7 +238,15 @@ function getSplitDataArr() {
 }
 
 const getCellStyle = (index) => {
-	const styles = { height: `${100 / gridCount}%`, width: `${100 / gridCount}%` };
+	const styles = {
+		height: `${100 / gridCount}%`,
+		width: `${100 / gridCount}%`,
+		backgroundColor: '',
+	};
+
+	if (index == currentClick.value) {
+		styles.backgroundColor = '#ccc';
+	}
 
 	// if (winnerRow) {
 	//     const winIndex = winnerRow.findIndex(i => i === index);
@@ -259,6 +270,16 @@ const getCellClassNames = (index: number) => {
 		highlighted: Number.isInteger(hoverCell.value) && (sameRow || sameColumn),
 		// victorious: winnerRow?.includes(index),
 	};
+};
+
+const onClick = (e) => {
+	const { clientX, clientY } = e.changedTouches[0];
+	const el = document.elementFromPoint(clientX, clientY) as HTMLElement;
+	const index = el?.dataset.key;
+
+	if (e.classList.contains('cell') && e.dataset.value == 'empty') {
+		currentClick.value = index || null;
+	}
 };
 
 const onTouchMove = (e) => {
