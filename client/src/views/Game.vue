@@ -278,7 +278,11 @@ const onClick = (e) => {
 	console.log(e.target.dataset);
 
 	if (e.target.classList.contains('cell') && e.target.dataset.value == 'empty') {
-		currentClick.value = e.target.dataset.key;
+		if (currentClick.value == e.target.dataset.key) {
+			data.value[Number(currentClick.value)] = 'x';
+		} else {
+			currentClick.value = e.target.dataset.key;
+		}
 	}
 };
 
