@@ -4,14 +4,23 @@
 		<div class="md:col-span-8 col-span-12 flex flex-col">
 			<div class="py-2">
 				<div class="px-3 container md:mx-auto">
-					<div class="flex mx-2 flex-wrap">
+					<div
+						class="flex mx-2 flex-wrap status-panel"
+						:class="getClassCurrentUserTurn()"
+					>
 						<div
 							class="flex-shrink-0 flex-grow-0 flex items-center basis-auto w-1/2"
 						>
-							<div class="w-[40px]">
-								<IConX v-if="currentRoom?.roomMasterFirst"></IConX>
-								<IConO v-else></IConO>
+							<div
+								class="w-[40px] panel-x-block"
+								v-if="currentRoom?.roomMasterFirst"
+							>
+								<IConX></IConX>
 							</div>
+							<div class="w-[40px] panel-o-block" v-else>
+								<IConO></IConO>
+							</div>
+
 							<div
 								class="text-right min-w-0 flex-shrink text-lg flex flex-grow flex-col"
 							>
@@ -32,10 +41,16 @@
 						<div
 							class="flex-shrink-0 flex-grow-0 basis-auto flex flex-row-reverse items-center w-1/2"
 						>
-							<div class="w-[40px]">
-								<IConX v-if="!currentRoom?.roomMasterFirst"></IConX>
-								<IConO v-else></IConO>
+							<div
+								class="w-[40px] panel-x-block"
+								v-if="!currentRoom?.roomMasterFirst"
+							>
+								<IConX></IConX>
 							</div>
+							<div class="w-[40px] panel-o-block" v-else>
+								<IConO></IConO>
+							</div>
+
 							<div
 								class="min-w-0 flex-shrink text-lg flex flex-grow flex-col"
 							>
@@ -196,7 +211,7 @@ const gridCount = 16;
 
 const { currentRoom } = useRoomState();
 const { users, me } = useUserState();
-const { leaveRoom, guestReady, masterReady } = useConnectGlobal();
+const { leaveRoom, guestReady, masterReady, gameHandle } = useConnectGlobal();
 
 const currentClick = ref<string | null>();
 
@@ -275,11 +290,9 @@ const getCellClassNames = (index: number) => {
 };
 
 const onClick = (e) => {
-	console.log(e.target.dataset);
-
 	if (e.target.classList.contains('cell') && e.target.dataset.value == 'empty') {
 		if (currentClick.value == e.target.dataset.key) {
-			data.value[Number(currentClick.value)] = 'x';
+			gameHandle(Number(currentClick.value));
 		} else {
 			currentClick.value = e.target.dataset.key;
 		}
@@ -314,6 +327,17 @@ const onTouchEnd = (e) => {
 //     };
 
 const getBoardIndex = (rowIndex, cellIndex) => rowIndex * gridCount + cellIndex;
+
+function getClassCurrentUserTurn() {
+	if (
+		(currentRoom.value?.roomMasterFirst && currentRoom.value.isMasterTurn) ||
+		(!currentRoom.value?.roomMasterFirst && !currentRoom.value?.isMasterTurn)
+	) {
+		return 'x-move';
+	} else {
+		return 'o-move';
+	}
+}
 
 reset();
 const listAvatarRandom = [
@@ -489,12 +513,6 @@ table {
 }
 
 .status-panel {
-	padding: 1em 0;
-	display: flex;
-	justify-content: space-between;
-	width: 100%;
-	max-width: 40em;
-
 	.panel-x-block,
 	.panel-o-block,
 	.info-content {
@@ -502,7 +520,7 @@ table {
 		align-items: flex-end;
 		font-size: 2.6em;
 
-		> img {
+		> svg {
 			width: 1.2em;
 			transition: transform 0.2s ease, opacity 0.2s ease;
 		}
@@ -512,14 +530,14 @@ table {
 	.panel-o-block {
 		font-family: 'Roboto Mono', monospace;
 
-		> img {
+		> svg {
 			opacity: 0.4;
 			margin-left: 0.2em;
 			transform-origin: left center;
 		}
 	}
 
-	.panel-o-block > img {
+	.panel-o-block > svg {
 		margin-left: 0;
 		margin-right: 0.2em;
 		transform-origin: right center;
@@ -527,7 +545,7 @@ table {
 
 	&.x-move .panel-x-block,
 	&.o-move .panel-o-block {
-		> img {
+		> svg {
 			opacity: 1;
 			transform: scale(1.6);
 		}

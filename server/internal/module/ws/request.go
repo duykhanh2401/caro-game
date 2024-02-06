@@ -19,6 +19,7 @@ const (
 	CREATE_ROOM
 	GUEST_READY
 	MASTER_READY
+	GAME_HANDLE_REQUEST
 )
 
 func (t RequestType) String() string {
@@ -32,5 +33,6 @@ func (t RequestType) String() string {
 		"CREATE_ROOM",
 		"GUEST_READY",
 		"MASTER_READY",
+		"GAME_HANDLE_REQUEST",
 	}[t]
 }

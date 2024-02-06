@@ -38,6 +38,7 @@ type Hub struct {
 	ChangeUserName chan *Request
 	GuestReady     chan *Request
 	MasterReady    chan *Request
+	GameHandle     chan *Request
 	Options        *HubOptions
 	connection     ConnectionStore
 	room           RoomStore
@@ -79,6 +80,7 @@ func NewHub() *Hub {
 		ChangeUserName: make(chan *Request),
 		GuestReady:     make(chan *Request),
 		MasterReady:    make(chan *Request),
+		GameHandle:     make(chan *Request),
 	}
 }
 
@@ -124,6 +126,10 @@ func (h *Hub) Run() {
 		case req := <-h.MasterReady:
 			{
 				h.masterReady(req)
+			}
+		case req := <-h.GameHandle:
+			{
+				h.gameHandle(req)
 			}
 		}
 
@@ -201,6 +207,10 @@ func (h *Hub) Handler() gin.HandlerFunc {
 				case MASTER_READY:
 					{
 						h.MasterReady <- &request
+					}
+				case GAME_HANDLE_REQUEST:
+					{
+						h.GameHandle <- &request
 					}
 				}
 			}
@@ -428,6 +438,112 @@ func (h *Hub) leaveRoom(req *Request) {
 				}
 			}
 		}
+	}
+
+}
+
+func (h *Hub) gameHandle(req *Request) {
+	fmt.Println("Game Handle !!!")
+
+	conn, ok := h.connection.Load(req.ClientID)
+	if !ok {
+		h.error(conn, ErrBadRequest)
+		h.unregister(conn)
+		return
+	}
+
+	var index int32
+	{
+		if tmp, ok := req.Body["index"]; ok {
+			if s, ok := (tmp.(int32)); ok {
+				index = s
+			} else {
+				fmt.Println("ERROR", req.Body["index"], "------", s, tmp)
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	var roomID string
+	{
+		if tmp, ok := req.Body["roomID"]; ok {
+			if s, ok := tmp.(string); ok {
+				roomID = s
+			} else {
+				h.error(conn, ErrBadRequest)
+				return
+			}
+		} else {
+			h.error(conn, ErrBadRequest)
+			return
+		}
+	}
+
+	room, ok := h.room.Room(roomID)
+	if !ok {
+		h.error(conn, ErrNotFound)
+		return
+	}
+
+	if !isGameReady(room) {
+		h.error(conn, errors.New("Trò chơi chưa được bắt đầu"))
+		return
+	}
+
+	if ok := checkUserInRoom(conn.ClientID, room); !ok {
+		h.error(conn, errors.New("Bạn không trong phòng này"))
+		return
+	}
+
+	if (isMaster(conn.ClientID, room) && !room.IsMasterTurn) || (isGuest(conn.ClientID, room) && room.IsMasterTurn) {
+		h.error(conn, errors.New("Chưa đến lượt của bạn"))
+
+		return
+	}
+
+	isXTurn := false
+
+	if (room.MasterFirst && room.IsMasterTurn) || (!room.MasterFirst && !room.IsMasterTurn) {
+		isXTurn = true
+	}
+
+	roomRes, ok := h.room.HandleGame(roomID, isXTurn, index)
+	if ok {
+		res := Response{
+			Body: map[string]interface{}{
+				"data": map[string]interface{}{
+					"index":        index,
+					"isXTurn":      isXTurn,
+					"IsMasterTurn": roomRes.IsMasterTurn,
+				},
+			},
+			Type: GUEST_READY_RESPONSE,
+		}
+
+		if err := conn.WriteJSON(res); err != nil {
+			if e := h.error(conn, ErrServerError); e != nil {
+				h.unregister(conn)
+				// return
+			}
+		}
+
+		if isMaster(conn.ClientID, room) {
+			conn, ok = h.connection.Load(roomRes.Guest)
+		} else {
+			conn, ok = h.connection.Load(roomRes.Master)
+		}
+
+		if err := conn.WriteJSON(res); err != nil {
+			if e := h.error(conn, ErrServerError); e != nil {
+				h.unregister(conn)
+				// return
+			}
+		}
+
 	}
 
 }
@@ -896,3 +1012,35 @@ func EncodeToString(max int) string {
 }
 
 var table = [...]byte{'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
+
+func checkUserInRoom(userID string, room Room) bool {
+	if room.Guest == userID || room.Master == userID {
+		return true
+	}
+
+	return false
+}
+
+func isMaster(userID string, room Room) bool {
+	if room.Master == userID {
+		return true
+	}
+
+	return false
+}
+
+func isGuest(userID string, room Room) bool {
+	if room.Guest == userID {
+		return true
+	}
+
+	return false
+}
+
+func isGameReady(room Room) bool {
+	if room.Guest != "" && room.Master != "" && room.MasterReady && room.GuestReady {
+		return true
+	}
+
+	return false
+}

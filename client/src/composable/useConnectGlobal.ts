@@ -25,6 +25,7 @@ enum ResponseEvents {
 	ME_TO_ROOM_MASTER,
 	GUEST_READY_RESPONSE,
 	MASTER_READY_RESPONSE,
+	GAME_HANDLE_RESPONSE,
 }
 
 enum RequestEvents {
@@ -37,6 +38,7 @@ enum RequestEvents {
 	CREATE_ROOM,
 	GUEST_READY,
 	MASTER_READY,
+	GAME_HANDLE_REQUEST,
 }
 
 export default function useConnectGlobal() {
@@ -80,6 +82,8 @@ export default function useConnectGlobal() {
 				case ResponseEvents.ERROR:
 					console.log('wsChat(message): ResponseEvents.ERROR:');
 					console.log(JSON.stringify(res, null, 2));
+
+					toast.error(res.error.message);
 					break;
 				case ResponseEvents.CONNECTED:
 					console.log('ws Connected');
@@ -154,6 +158,9 @@ export default function useConnectGlobal() {
 						currentRoom.value.masterReady = res.body.isReady || false;
 					}
 					break;
+				case ResponseEvents.GAME_HANDLE_RESPONSE:
+					// currentRoom.value?.data[res.body.data.index] =
+					console.log(res);
 			}
 		});
 	}
@@ -231,6 +238,20 @@ export default function useConnectGlobal() {
 		} catch (error) {}
 	}
 
+	function gameHandle(index: number) {
+		try {
+			ws.value?.send(
+				JSON.stringify({
+					type: RequestEvents.GAME_HANDLE_REQUEST,
+					body: {
+						roomID: currentRoom.value?.id,
+						index: String(index),
+					},
+				}),
+			);
+		} catch (error) {}
+	}
+
 	function guestReady(ready: boolean) {
 		try {
 			ws.value?.send(
@@ -268,6 +289,7 @@ export default function useConnectGlobal() {
 		leaveRoom,
 		guestReady,
 		masterReady,
+		gameHandle,
 		ws,
 		url,
 		me,

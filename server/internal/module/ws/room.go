@@ -26,7 +26,7 @@ type Room struct {
 	IsMasterTurn bool        `json:"isMasterTurn"`
 	GuestReady   bool        `json:"guestReady"`
 	MasterReady  bool        `json:"masterReady"`
-	DataCaro     [20][20]int `json:"-"`
+	DataCaro     [255]string `json:"data"`
 }
 
 type RoomStore interface {
@@ -39,6 +39,7 @@ type RoomStore interface {
 	UserJoinedTo(userID string) (room Room, ok bool)
 	GuestReady(roomID string, isReady bool) bool
 	MasterReady(roomID string, isReady bool) bool
+	HandleGame(roomID string, isXTurn bool, index int32) (*Room, bool)
 }
 
 func NewInMemoryRoomStore() *InMemoryRoomStore {
@@ -79,16 +80,39 @@ func (r *InMemoryRoomStore) Create(roomID string, roomName string, userCreate st
 	return room, nil
 }
 
+func (r *InMemoryRoomStore) HandleGame(roomID string, isXTurn bool, index int32) (*Room, bool) {
+	r.Lock()
+	defer r.Unlock()
+	room, ok := r.rooms[roomID]
+
+	if ok {
+
+		if room.DataCaro[index] != "" {
+			if isXTurn {
+				room.DataCaro[index] = "x"
+			} else {
+				room.DataCaro[index] = "o"
+			}
+
+			room.IsMasterTurn = !room.IsMasterTurn
+
+			r.rooms[roomID] = room
+			return &room, true
+		}
+
+	}
+
+	return nil, false
+}
+
 func (r *InMemoryRoomStore) ResetDataCaro(roomID string) {
 
 	r.Lock()
 	room, ok := r.rooms[roomID]
 	r.Unlock()
 	if ok {
-		for y := 0; y < 20; y++ {
-			for x := 0; x < 20; x++ {
-				room.DataCaro[x][y] = 0
-			}
+		for x := 0; x < 225; x++ {
+			room.DataCaro[x] = ""
 		}
 	}
 

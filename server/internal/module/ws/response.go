@@ -26,6 +26,7 @@ const (
 	ME_TO_ROOM_MASTER
 	GUEST_READY_RESPONSE
 	MASTER_READY_RESPONSE
+	GAME_HANDLE_RESPONSE
 )
 
 func (t ResponseType) String() string {
@@ -45,5 +46,6 @@ func (t ResponseType) String() string {
 		"ME_CREATED_ROOM",
 		"GUEST_READY_RESPONSE",
 		"MASTER_READY_RESPONSE",
+		"GAME_HANDLE_RESPONSE",
 	}[t]
 }

@@ -13,6 +13,7 @@ export interface IRoom {
 	guestReady: boolean;
 	masterReady: boolean;
 	roomMaster: string;
+	data: string[];
 }
 
 export interface IMessage {
