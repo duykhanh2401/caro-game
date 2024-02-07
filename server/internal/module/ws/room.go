@@ -86,8 +86,9 @@ func (r *InMemoryRoomStore) HandleGame(roomID string, isXTurn bool, index int32)
 	room, ok := r.rooms[roomID]
 
 	if ok {
-
-		if room.DataCaro[index] != "" {
+		fmt.Println(room.DataCaro[index])
+		fmt.Println(room.DataCaro[index] == "")
+		if room.DataCaro[index] == "" {
 			if isXTurn {
 				room.DataCaro[index] = "x"
 			} else {

@@ -35,7 +35,20 @@ export enum MessageType {
 
 const messages = ref<IMessage[]>([]);
 const rooms = ref<IRoom[]>();
-const currentRoom = ref<IRoom>();
+const currentRoom = ref<IRoom>({
+	id: '',
+	name: '',
+	master: '',
+	masterWin: 0,
+	guest: '',
+	guestWin: 0,
+	roomMasterFirst: true,
+	isMasterTurn: true,
+	guestReady: false,
+	masterReady: false,
+	roomMaster: '',
+	data: [],
+});
 const users = ref<IUser[]>();
 
 export default function useRoomState() {

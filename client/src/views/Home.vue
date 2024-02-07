@@ -1,6 +1,6 @@
 <template>
 	<FirstPage v-if="!me.isUpdateUserName" @changeUsername="changeUsername"></FirstPage>
-	<Game v-else-if="currentRoom"></Game>
+	<Game v-else-if="currentRoom.id"></Game>
 	<Menu v-else></Menu>
 </template>
 <script setup lang="ts">

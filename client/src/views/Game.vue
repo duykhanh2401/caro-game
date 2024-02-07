@@ -207,7 +207,7 @@ import useUserState, { type IUser } from '../composable/useUserState';
 import useConnectGlobal from '../composable/useConnectGlobal';
 const data = ref<Array<String>>([]);
 const hoverCell = ref<number | null>();
-const gridCount = 16;
+const gridCount = 15;
 
 const { currentRoom } = useRoomState();
 const { users, me } = useUserState();
@@ -245,13 +245,15 @@ function getRandomAvatar(): string {
 }
 
 function reset() {
-	data.value = new Array(gridCount * gridCount).fill(null);
+	currentRoom.value.data = new Array(gridCount * gridCount).fill(null);
 }
 
 function getSplitDataArr() {
-	return new Array(Math.ceil(data.value.length / gridCount))
+	return new Array(Math.ceil(currentRoom.value.data.length / gridCount))
 		.fill(null)
-		.map((item, i) => data.value.slice(gridCount * i, gridCount * (i + 1)));
+		.map((item, i) =>
+			currentRoom.value.data.slice(gridCount * i, gridCount * (i + 1)),
+		);
 }
 
 const getCellStyle = (index) => {
@@ -312,7 +314,7 @@ const onTouchEnd = (e) => {
 	const el = document.elementFromPoint(clientX, clientY) as HTMLElement;
 	const index = el?.dataset.key;
 	if (index) {
-		const cell = data.value[index];
+		const cell = currentRoom.value.data[index];
 		if (index && cell === null) {
 			// handleCellSet(index);
 			// vibrate(25);

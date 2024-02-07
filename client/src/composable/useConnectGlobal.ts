@@ -89,7 +89,20 @@ export default function useConnectGlobal() {
 					console.log('ws Connected');
 					console.log(res);
 					me.value = res.body.data;
-					currentRoom.value = undefined;
+					currentRoom.value = {
+						id: '',
+						name: '',
+						master: '',
+						masterWin: 0,
+						guest: '',
+						guestWin: 0,
+						roomMasterFirst: true,
+						isMasterTurn: true,
+						guestReady: false,
+						masterReady: false,
+						roomMaster: '',
+						data: [],
+					};
 					const username = window.localStorage.getItem('username');
 					if (username) {
 						changeUsername(username);
@@ -142,7 +155,20 @@ export default function useConnectGlobal() {
 					break;
 				case ResponseEvents.ME_LEFT_ROOM:
 					toast.info(res.body.message);
-					currentRoom.value = undefined;
+					currentRoom.value = {
+						id: '',
+						name: '',
+						master: '',
+						masterWin: 0,
+						guest: '',
+						guestWin: 0,
+						roomMasterFirst: true,
+						isMasterTurn: true,
+						guestReady: false,
+						masterReady: false,
+						roomMaster: '',
+						data: [],
+					};
 					break;
 				case ResponseEvents.GUEST_READY_RESPONSE:
 					console.log('GUEST READY !!!!!');
@@ -159,8 +185,13 @@ export default function useConnectGlobal() {
 					}
 					break;
 				case ResponseEvents.GAME_HANDLE_RESPONSE:
-					// currentRoom.value?.data[res.body.data.index] =
-					console.log(res);
+					if (res.body.data.isXTurn) {
+						currentRoom.value!.data[res.body.data.index] = 'x';
+					} else {
+						currentRoom.value!.data[res.body.data.index] = 'o';
+					}
+
+					currentRoom.value!.isMasterTurn = res.body.data.isMasterTurn;
 			}
 		});
 	}
@@ -245,7 +276,7 @@ export default function useConnectGlobal() {
 					type: RequestEvents.GAME_HANDLE_REQUEST,
 					body: {
 						roomID: currentRoom.value?.id,
-						index: String(index),
+						index: index,
 					},
 				}),
 			);

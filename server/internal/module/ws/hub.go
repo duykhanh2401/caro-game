@@ -452,10 +452,11 @@ func (h *Hub) gameHandle(req *Request) {
 		return
 	}
 
-	var index int32
+	var index float64
 	{
 		if tmp, ok := req.Body["index"]; ok {
-			if s, ok := (tmp.(int32)); ok {
+			fmt.Printf("%T\n", tmp)
+			if s, ok := tmp.(float64); ok {
 				index = s
 			} else {
 				fmt.Println("ERROR", req.Body["index"], "------", s, tmp)
@@ -489,6 +490,8 @@ func (h *Hub) gameHandle(req *Request) {
 		return
 	}
 
+	fmt.Println(room)
+
 	if !isGameReady(room) {
 		h.error(conn, errors.New("Trò chơi chưa được bắt đầu"))
 		return
@@ -511,17 +514,18 @@ func (h *Hub) gameHandle(req *Request) {
 		isXTurn = true
 	}
 
-	roomRes, ok := h.room.HandleGame(roomID, isXTurn, index)
+	roomRes, ok := h.room.HandleGame(roomID, isXTurn, int32(index))
+	fmt.Println(ok)
 	if ok {
 		res := Response{
 			Body: map[string]interface{}{
 				"data": map[string]interface{}{
 					"index":        index,
 					"isXTurn":      isXTurn,
-					"IsMasterTurn": roomRes.IsMasterTurn,
+					"isMasterTurn": roomRes.IsMasterTurn,
 				},
 			},
-			Type: GUEST_READY_RESPONSE,
+			Type: GAME_HANDLE_RESPONSE,
 		}
 
 		if err := conn.WriteJSON(res); err != nil {
@@ -884,7 +888,7 @@ func (h *Hub) masterReady(req *Request) {
 		}
 	}
 
-	if ok := h.room.GuestReady(roomID, isReady); !ok {
+	if ok := h.room.MasterReady(roomID, isReady); !ok {
 		h.error(conn, ErrServerError)
 		return
 	}
@@ -916,6 +920,9 @@ func (h *Hub) masterReady(req *Request) {
 }
 
 func (h *Hub) unregister(conn *Client) {
+	if conn != nil {
+		return
+	}
 	fmt.Println("Unregister: ", conn.ClientID)
 	clientID := conn.ClientID
 	if len(clientID) == 0 {
@@ -990,6 +997,9 @@ func (h *Hub) unregister(conn *Client) {
 }
 
 func (h *Hub) error(conn *Client, err error) error {
+	if conn == nil {
+		return errors.New("Connection Error")
+	}
 	res := Response{
 		Error: map[string]interface{}{
 			"message": err.Error(),
