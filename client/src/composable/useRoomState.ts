@@ -14,6 +14,9 @@ export interface IRoom {
 	masterReady: boolean;
 	roomMaster: string;
 	data: string[];
+	winnerRow: number[];
+	tempData: string[];
+	gameEnd: boolean;
 }
 
 export interface IMessage {
@@ -48,6 +51,9 @@ const currentRoom = ref<IRoom>({
 	masterReady: false,
 	roomMaster: '',
 	data: [],
+	winnerRow: [],
+	tempData: [],
+	gameEnd: false,
 });
 const users = ref<IUser[]>();
 

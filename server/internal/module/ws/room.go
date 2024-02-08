@@ -40,6 +40,7 @@ type RoomStore interface {
 	GuestReady(roomID string, isReady bool) bool
 	MasterReady(roomID string, isReady bool) bool
 	HandleGame(roomID string, isXTurn bool, index int32) (*Room, bool)
+	HandleWinGame(roomID string, isMasterWin bool) (*Room, bool)
 }
 
 func NewInMemoryRoomStore() *InMemoryRoomStore {
@@ -104,6 +105,37 @@ func (r *InMemoryRoomStore) HandleGame(roomID string, isXTurn bool, index int32)
 	}
 
 	return nil, false
+}
+
+func (r *InMemoryRoomStore) HandleWinGame(roomID string, isMasterWin bool) (*Room, bool) {
+	r.Lock()
+	_, ok := r.rooms[roomID]
+	r.Unlock()
+
+	if ok {
+		r.ResetDataCaro(roomID)
+		r.Lock()
+
+		room := r.rooms[roomID]
+
+		if isMasterWin {
+			room.MasterWin = room.MasterWin + 1
+		} else {
+			room.GuestWin = room.GuestWin + 1
+		}
+
+		room.IsMasterTurn = !room.MasterFirst
+		room.MasterFirst = !room.MasterFirst
+
+		room.MasterReady = false
+		room.GuestReady = false
+
+		r.Unlock()
+
+		return &room, ok
+	}
+
+	return nil, ok
 }
 
 func (r *InMemoryRoomStore) ResetDataCaro(roomID string) {

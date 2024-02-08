@@ -27,6 +27,7 @@ const (
 	GUEST_READY_RESPONSE
 	MASTER_READY_RESPONSE
 	GAME_HANDLE_RESPONSE
+	GAME_END
 )
 
 func (t ResponseType) String() string {
@@ -47,5 +48,6 @@ func (t ResponseType) String() string {
 		"GUEST_READY_RESPONSE",
 		"MASTER_READY_RESPONSE",
 		"GAME_HANDLE_RESPONSE",
+		"GAME_END",
 	}[t]
 }

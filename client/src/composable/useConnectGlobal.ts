@@ -26,6 +26,7 @@ enum ResponseEvents {
 	GUEST_READY_RESPONSE,
 	MASTER_READY_RESPONSE,
 	GAME_HANDLE_RESPONSE,
+	GAME_END,
 }
 
 enum RequestEvents {
@@ -102,6 +103,9 @@ export default function useConnectGlobal() {
 						masterReady: false,
 						roomMaster: '',
 						data: [],
+						winnerRow: [],
+						tempData: [],
+						gameEnd: false,
 					};
 					const username = window.localStorage.getItem('username');
 					if (username) {
@@ -120,7 +124,7 @@ export default function useConnectGlobal() {
 					}
 					break;
 				case ResponseEvents.ME_CREATED_ROOM:
-					currentRoom.value = res.body.room;
+					currentRoom.value = { ...currentRoom.value, ...res.body.room };
 
 					users.value.push(res.body.user);
 					messages.value = [
@@ -139,19 +143,19 @@ export default function useConnectGlobal() {
 					rooms.value = res.body.data;
 					break;
 				case ResponseEvents.ME_JOINED_CHAT:
-					currentRoom.value = res.body.data.room;
+					currentRoom.value = { ...currentRoom.value, ...res.body.data.room };
 					users.value.push(...res.body.data.user);
 
 					break;
 				case ResponseEvents.OTHER_JOINED_CHAT:
-					currentRoom.value = res.body.data.room;
+					currentRoom.value = { ...currentRoom.value, ...res.body.data.room };
 					users.value.push(res.body.data.user);
 					toast.info(res.body.message);
 
 					break;
 				case ResponseEvents.GUEST_LEAVE_ROOM:
 					toast.info(res.body.message);
-					currentRoom.value = res.body.room;
+					currentRoom.value = { ...currentRoom.value, ...res.body.room };
 					break;
 				case ResponseEvents.ME_LEFT_ROOM:
 					toast.info(res.body.message);
@@ -168,6 +172,9 @@ export default function useConnectGlobal() {
 						masterReady: false,
 						roomMaster: '',
 						data: [],
+						winnerRow: [],
+						tempData: [],
+						gameEnd: false,
 					};
 					break;
 				case ResponseEvents.GUEST_READY_RESPONSE:
@@ -192,6 +199,10 @@ export default function useConnectGlobal() {
 					}
 
 					currentRoom.value!.isMasterTurn = res.body.data.isMasterTurn;
+					break;
+				case ResponseEvents.GAME_END:
+					currentRoom.value = { ...currentRoom.value, ...res.body.data.room };
+					currentRoom.value.winnerRow = res.body.data.winnerRow;
 			}
 		});
 	}

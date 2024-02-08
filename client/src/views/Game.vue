@@ -36,7 +36,7 @@
 									:src="getRandomAvatar()"
 								/>
 							</div>
-							<div class="mr-2">0</div>
+							<div class="mr-2">{{ currentRoom.masterWin }}</div>
 						</div>
 						<div
 							class="flex-shrink-0 flex-grow-0 basis-auto flex flex-row-reverse items-center w-1/2"
@@ -69,7 +69,7 @@
 									:src="getRandomAvatar()"
 								/>
 							</div>
-							<div class="ml-2">0</div>
+							<div class="ml-2">{{ currentRoom.guestWin }}</div>
 						</div>
 					</div>
 				</div>
@@ -260,16 +260,13 @@ const getCellStyle = (index) => {
 	const styles = {
 		height: `${100 / gridCount}%`,
 		width: `${100 / gridCount}%`,
+		animationDelay: '',
 	};
 
-	// if (index == currentClick.value) {
-	// 	styles.backgroundColor = '#ccc';
-	// }
-
-	// if (winnerRow) {
-	//     const winIndex = winnerRow.findIndex(i => i === index);
-	//     if (winIndex >= 0) styles.animationDelay = `${winIndex * (1 / gridCount)}s`;
-	// }
+	if (currentRoom.value.winnerRow.length > 0) {
+		const winIndex = currentRoom.value.winnerRow.findIndex((i) => i === index);
+		if (winIndex >= 0) styles.animationDelay = `${winIndex * (1 / gridCount)}s`;
+	}
 
 	return styles;
 };
@@ -286,8 +283,8 @@ const getCellClassNames = (index: number) => {
 	return {
 		hovered: index === hoverCell.value,
 		highlighted: Number.isInteger(hoverCell.value) && (sameRow || sameColumn),
-		// victorious: winnerRow?.includes(index),
 		clicked: String(index) == currentClick.value,
+		victorious: currentRoom.value.winnerRow.includes(index),
 	};
 };
 

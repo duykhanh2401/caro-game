@@ -535,6 +535,47 @@ func (h *Hub) gameHandle(req *Request) {
 			}
 		}
 
+		var connRival *Client
+		if isMaster(conn.ClientID, room) {
+			connRival, ok = h.connection.Load(roomRes.Guest)
+		} else {
+			connRival, ok = h.connection.Load(roomRes.Master)
+		}
+
+		if err := connRival.WriteJSON(res); err != nil {
+			if e := h.error(connRival, ErrServerError); e != nil {
+				h.unregister(connRival)
+				// return
+			}
+		}
+
+	}
+
+	winnerRow := getWinnerRow(roomRes.DataCaro[:])
+
+	fmt.Println("Winner Row: ", winnerRow)
+	if len(winnerRow) > 0 {
+		newRoomWinner, ok := h.room.HandleWinGame(roomID, roomRes.IsMasterTurn)
+		if !ok {
+			return
+		}
+		res := Response{
+			Body: map[string]interface{}{
+				"data": map[string]interface{}{
+					"winnerRow": winnerRow,
+					"room":      newRoomWinner,
+				},
+			},
+			Type: GAME_END,
+		}
+
+		if err := conn.WriteJSON(res); err != nil {
+			if e := h.error(conn, ErrServerError); e != nil {
+				h.unregister(conn)
+				// return
+			}
+		}
+
 		if isMaster(conn.ClientID, room) {
 			conn, ok = h.connection.Load(roomRes.Guest)
 		} else {
@@ -547,7 +588,6 @@ func (h *Hub) gameHandle(req *Request) {
 				// return
 			}
 		}
-
 	}
 
 }
