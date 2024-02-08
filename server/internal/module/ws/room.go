@@ -142,12 +142,14 @@ func (r *InMemoryRoomStore) ResetDataCaro(roomID string) {
 
 	r.Lock()
 	room, ok := r.rooms[roomID]
-	r.Unlock()
 	if ok {
 		for x := 0; x < 225; x++ {
 			room.DataCaro[x] = ""
 		}
+
+		r.rooms[roomID] = room
 	}
+	r.Unlock()
 
 }
 
