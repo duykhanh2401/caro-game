@@ -4,7 +4,8 @@ import useUserState from './useUserState';
 import { useToast } from 'vue-toastification';
 import useRoomState, { MessageType } from './useRoomState';
 const isConnecting = ref(false);
-const url = ref('ws://localhost:2401/ws/caro');
+const protocol = window.location.protocol.includes('https') ? 'wss' : 'ws';
+const url = ref(`${protocol}://${location.host.split(':')[0]}:2401/ws/caro`);
 const ws = ref<WebSocket>();
 
 enum ResponseEvents {
