@@ -447,7 +447,7 @@ table {
 .game {
 	height: 100%;
 	aspect-ratio: 1 / 1;
-	max-height: 80vw;
+	max-height: 95vw;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
