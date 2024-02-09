@@ -18,11 +18,11 @@ type Room struct {
 	Name         string      `json:"name"`
 	Type         RoomType    `json:"type"`
 	Users        []string    `json:"-"`
-	Master       string      `json:"roomMaster"`
-	MasterWin    int         `json:"roomMasterWin"`
+	Master       string      `json:"master"`
+	MasterWin    int         `json:"masterWin"`
+	MasterFirst  bool        `json:"masterFirst"`
 	Guest        string      `json:"guest"`
 	GuestWin     int         `json:"guestWin"`
-	MasterFirst  bool        `json:"roomMasterFirst"`
 	IsMasterTurn bool        `json:"isMasterTurn"`
 	GuestReady   bool        `json:"guestReady"`
 	MasterReady  bool        `json:"masterReady"`
@@ -130,6 +130,7 @@ func (r *InMemoryRoomStore) HandleWinGame(roomID string, isMasterWin bool) (*Roo
 		room.MasterReady = false
 		room.GuestReady = false
 
+		r.rooms[roomID] = room
 		r.Unlock()
 
 		return &room, ok

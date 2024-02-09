@@ -97,15 +97,15 @@ export default function useConnectGlobal() {
 						masterWin: 0,
 						guest: '',
 						guestWin: 0,
-						roomMasterFirst: true,
+						masterFirst: true,
 						isMasterTurn: true,
 						guestReady: false,
 						masterReady: false,
-						roomMaster: '',
 						data: [],
 						winnerRow: [],
 						tempData: [],
 						gameEnd: false,
+						turnClosest: null,
 					};
 					const username = window.localStorage.getItem('username');
 					if (username) {
@@ -156,6 +156,7 @@ export default function useConnectGlobal() {
 				case ResponseEvents.GUEST_LEAVE_ROOM:
 					toast.info(res.body.message);
 					currentRoom.value = { ...currentRoom.value, ...res.body.room };
+					currentRoom.value.data = new Array(15 * 15).fill(null);
 					break;
 				case ResponseEvents.ME_LEFT_ROOM:
 					toast.info(res.body.message);
@@ -166,15 +167,15 @@ export default function useConnectGlobal() {
 						masterWin: 0,
 						guest: '',
 						guestWin: 0,
-						roomMasterFirst: true,
+						masterFirst: true,
 						isMasterTurn: true,
 						guestReady: false,
 						masterReady: false,
-						roomMaster: '',
 						data: [],
 						winnerRow: [],
 						tempData: [],
 						gameEnd: false,
+						turnClosest: null,
 					};
 					break;
 				case ResponseEvents.GUEST_READY_RESPONSE:
@@ -197,12 +198,20 @@ export default function useConnectGlobal() {
 					} else {
 						currentRoom.value!.data[res.body.data.index] = 'o';
 					}
-
+					currentRoom.value.turnClosest = res.body.data.index;
 					currentRoom.value!.isMasterTurn = res.body.data.isMasterTurn;
+					console.log(currentRoom.value);
+
 					break;
 				case ResponseEvents.GAME_END:
+					const listDataOld = currentRoom.value.data;
 					currentRoom.value = { ...currentRoom.value, ...res.body.data.room };
-					currentRoom.value.winnerRow = res.body.data.winnerRow;
+					currentRoom.value.winnerRow = [...res.body.data.winnerRow];
+					currentRoom.value.gameEnd = true;
+					currentRoom.value.data = listDataOld;
+					console.log(currentRoom.value);
+
+					break;
 			}
 		});
 	}

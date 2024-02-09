@@ -13,7 +13,7 @@
 						>
 							<div
 								class="w-[40px] panel-x-block"
-								v-if="currentRoom?.roomMasterFirst"
+								v-if="currentRoom?.masterFirst"
 							>
 								<IConX></IConX>
 							</div>
@@ -43,7 +43,7 @@
 						>
 							<div
 								class="w-[40px] panel-x-block"
-								v-if="!currentRoom?.roomMasterFirst"
+								v-if="!currentRoom?.masterFirst"
 							>
 								<IConX></IConX>
 							</div>
@@ -76,7 +76,10 @@
 			</div>
 			<div class="flex py-4 flex-grow justify-center items-center">
 				<div class="game">
-					<div class="board-wrapper">
+					<div class="board-wrapper" :class="currentRoom.gameEnd && 'ended'">
+						<div class="reset-block" @click="reset">
+							<span class="win-caption">Ấn để tiếp tục</span>
+						</div>
 						<table
 							class="board"
 							@click="onClick"
@@ -130,8 +133,9 @@
 	<DKModal
 		:isOpen="
 			currentRoom?.guest != '' &&
-			currentRoom?.roomMaster != '' &&
-			(currentRoom?.guestReady == false || currentRoom?.masterReady == false)
+			currentRoom?.master != '' &&
+			(currentRoom?.guestReady == false || currentRoom?.masterReady == false) &&
+			!currentRoom.gameEnd
 		"
 		:centered="true"
 		title="Sẵn Sàng"
@@ -199,13 +203,13 @@
 	</DKModal>
 </template>
 <script setup lang="ts">
-import { ref, getCurrentInstance, onMounted } from 'vue';
+import { ref, getCurrentInstance, onMounted, watch } from 'vue';
 import IConX from '@/assets/icons/x_icon.svg';
 import IConO from '@/assets/icons/o_icon.svg';
 import useRoomState from '../composable/useRoomState';
 import useUserState, { type IUser } from '../composable/useUserState';
 import useConnectGlobal from '../composable/useConnectGlobal';
-const data = ref<Array<String>>([]);
+import { fireConfetti } from '../utils/fireConfetti';
 const hoverCell = ref<number | null>();
 const gridCount = 15;
 
@@ -216,7 +220,7 @@ const { leaveRoom, guestReady, masterReady, gameHandle } = useConnectGlobal();
 const currentClick = ref<string | null>();
 
 function isMaster(): boolean {
-	if (currentRoom.value?.roomMaster == me.value.id) {
+	if (currentRoom.value?.master == me.value.id) {
 		return true;
 	}
 
@@ -225,7 +229,7 @@ function isMaster(): boolean {
 
 function GetMasterName(): IUser | undefined {
 	return users.value?.find((user) => {
-		return user.id == currentRoom.value?.roomMaster;
+		return user.id == currentRoom.value?.master;
 	});
 }
 
@@ -246,6 +250,9 @@ function getRandomAvatar(): string {
 
 function reset() {
 	currentRoom.value.data = new Array(gridCount * gridCount).fill(null);
+	currentRoom.value.gameEnd = false;
+	currentRoom.value.winnerRow = [];
+	currentRoom.value.turnClosest = null;
 }
 
 function getSplitDataArr() {
@@ -285,6 +292,7 @@ const getCellClassNames = (index: number) => {
 		highlighted: Number.isInteger(hoverCell.value) && (sameRow || sameColumn),
 		clicked: String(index) == currentClick.value,
 		victorious: currentRoom.value.winnerRow.includes(index),
+		turnClosest: currentRoom.value.turnClosest == index,
 	};
 };
 
@@ -320,17 +328,21 @@ const onTouchEnd = (e) => {
 	}
 };
 
-// const handleCellSet = index => {
-//         setBoard(prevBoard => [...set(prevBoard, index, currentPlayer)]);
-//         togglePlayer();
-//     };
+watch(currentRoom, (newData, oldData) => {
+	console.log('Watch', currentRoom.value.winnerRow);
+
+	if (currentRoom.value.winnerRow.length) {
+		fireConfetti(120, { y: 0.8, x: 1 });
+		fireConfetti(60, { y: 0.8, x: 0 });
+	}
+});
 
 const getBoardIndex = (rowIndex, cellIndex) => rowIndex * gridCount + cellIndex;
 
 function getClassCurrentUserTurn() {
 	if (
-		(currentRoom.value?.roomMasterFirst && currentRoom.value.isMasterTurn) ||
-		(!currentRoom.value?.roomMasterFirst && !currentRoom.value?.isMasterTurn)
+		(currentRoom.value?.masterFirst && currentRoom.value.isMasterTurn) ||
+		(!currentRoom.value?.masterFirst && !currentRoom.value?.isMasterTurn)
 	) {
 		return 'x-move';
 	} else {
@@ -422,11 +434,13 @@ table {
 	border: 1.5px solid #0f172a;
 }
 
-.clicked {
-	background-color: #eceff2 !important;
+.clicked,
+.turnClosest {
+	background-color: #ffeaa7 !important;
 }
 
-.dark .clicked {
+.dark .clicked,
+.dark .turnClosest {
 	background-color: #384455 !important;
 }
 

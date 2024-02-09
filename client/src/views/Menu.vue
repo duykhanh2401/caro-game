@@ -1,36 +1,29 @@
 <template>
 	<div class="grid grid-cols-12 h-full">
 		<div class="col-span-2 hidden md:block"></div>
-		<div class="md:col-span-8 col-span-12">
-			<div class="pb-[64px] relative h-[calc(100%-64px)]">
-				<div
-					class="flex items-center justify-center absolute top-1/4 left-0 right-0"
-				>
-					<div class="flex w-[280px] h-[140px]"><IConX /><IConO /></div>
-				</div>
-				<div
-					class="flex flex-col items-center absolute bottom-[40px] left-0 right-0"
-				>
-					<span
-						class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
-						@click="openCreateRoom = true"
-						>Tạo Phòng</span
-					>
-					<span
-						class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
-						@click="openJoinRoom = true"
-						>Vào Phòng</span
-					>
-					<span
-						class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
-						@click="openModalGetRooms"
-						>Danh Sách Phòng</span
-					>
-				</div>
+		<div class="md:col-span-8 col-span-12 flex flex-col">
+			<div class="flex items-center justify-center flex-grow">
+				<div class="flex w-[280px] h-[140px]"><IConX /><IConO /></div>
 			</div>
-			<div
-				class="nav-bottom fixed bottom-0 z-50 md:w-[50vh] md:left-1/2 left-0 h-16 w-full border-gray-200 dark:border-gray-600"
-			>
+			<div class="flex flex-col items-center py-8">
+				<span
+					class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
+					@click="openCreateRoom = true"
+					>Tạo Phòng</span
+				>
+				<!-- <span
+					class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
+					@click="openJoinRoom = true"
+					>Vào Phòng</span
+				> -->
+				<span
+					class="select-none btn-primary mt-2 w-[60%] rounded-[999px] btn inline-flex justify-center cursor-pointer"
+					@click="openModalGetRooms"
+					>Danh Sách Phòng</span
+				>
+			</div>
+
+			<div class="nav-bottom h-16 w-full border-gray-200 dark:border-gray-600">
 				<div class="grid h-full grid-cols-3 font-medium">
 					<button
 						type="button"
@@ -173,9 +166,4 @@ function closeAllModal() {
 	openListRoom.value = false;
 }
 </script>
-<style>
-.nav-bottom {
-	transform: translate(-50%, 0%);
-	left: 50%;
-}
-</style>
+<style></style>

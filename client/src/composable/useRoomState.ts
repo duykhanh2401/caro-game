@@ -6,17 +6,17 @@ export interface IRoom {
 	name: string;
 	master: string;
 	masterWin: number;
+	masterFirst: boolean;
 	guest: string;
 	guestWin: number;
-	roomMasterFirst: boolean;
 	isMasterTurn: boolean;
 	guestReady: boolean;
 	masterReady: boolean;
-	roomMaster: string;
 	data: string[];
 	winnerRow: number[];
 	tempData: string[];
 	gameEnd: boolean;
+	turnClosest: number | null;
 }
 
 export interface IMessage {
@@ -43,17 +43,17 @@ const currentRoom = ref<IRoom>({
 	name: '',
 	master: '',
 	masterWin: 0,
+	masterReady: false,
+	masterFirst: true,
 	guest: '',
 	guestWin: 0,
-	roomMasterFirst: true,
 	isMasterTurn: true,
 	guestReady: false,
-	masterReady: false,
-	roomMaster: '',
 	data: [],
 	winnerRow: [],
 	tempData: [],
 	gameEnd: false,
+	turnClosest: null,
 });
 const users = ref<IUser[]>();
 

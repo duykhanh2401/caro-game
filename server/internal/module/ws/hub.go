@@ -509,7 +509,8 @@ func (h *Hub) gameHandle(req *Request) {
 	}
 
 	isXTurn := false
-
+	fmt.Println("room.MasterFirst: ", room.MasterFirst)
+	fmt.Println("room.IsMasterTurn ", room.IsMasterTurn)
 	if (room.MasterFirst && room.IsMasterTurn) || (!room.MasterFirst && !room.IsMasterTurn) {
 		isXTurn = true
 	}
@@ -555,7 +556,7 @@ func (h *Hub) gameHandle(req *Request) {
 
 	fmt.Println("Winner Row: ", winnerRow)
 	if len(winnerRow) > 0 {
-		newRoomWinner, ok := h.room.HandleWinGame(roomID, roomRes.IsMasterTurn)
+		newRoomWinner, ok := h.room.HandleWinGame(roomID, room.IsMasterTurn)
 		if !ok {
 			return
 		}
@@ -960,7 +961,7 @@ func (h *Hub) masterReady(req *Request) {
 }
 
 func (h *Hub) unregister(conn *Client) {
-	if conn != nil {
+	if conn == nil {
 		return
 	}
 	fmt.Println("Unregister: ", conn.ClientID)
