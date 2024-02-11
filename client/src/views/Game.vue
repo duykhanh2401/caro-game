@@ -270,7 +270,7 @@ const getCellStyle = (index) => {
 
 	var size = '21px';
 	if (table.value?.clientHeight) {
-		size = `${table.value.clientHeight / YCount}px`;
+		size = `${(table.value.clientHeight * 90) / (100 * YCount)}px`;
 	}
 	const styles = {
 		height: size,
@@ -455,9 +455,9 @@ table {
 }
 
 .game {
-	height: 90%;
+	height: 100%;
 	aspect-ratio: 13 / 17;
-	// max-height: 100vw;
+	max-height: calc(95vw * 17 / 13);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
