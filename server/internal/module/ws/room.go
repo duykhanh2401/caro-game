@@ -26,7 +26,7 @@ type Room struct {
 	IsMasterTurn bool        `json:"isMasterTurn"`
 	GuestReady   bool        `json:"guestReady"`
 	MasterReady  bool        `json:"masterReady"`
-	DataCaro     [255]string `json:"data"`
+	DataCaro     [221]string `json:"data"`
 }
 
 type RoomStore interface {
@@ -144,7 +144,7 @@ func (r *InMemoryRoomStore) ResetDataCaro(roomID string) {
 	r.Lock()
 	room, ok := r.rooms[roomID]
 	if ok {
-		for x := 0; x < 225; x++ {
+		for x := 0; x < 221; x++ {
 			room.DataCaro[x] = ""
 		}
 

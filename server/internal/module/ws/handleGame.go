@@ -1,18 +1,19 @@
 package ws
 
-const boardSize = 15
+const xSize = 13
+const ySize = 17
 const marksToWin = 5
 
 func fitsVertically(i int) bool {
-	return i+boardSize*(marksToWin-1) < boardSize*boardSize
+	return i+ySize*(marksToWin-1) < xSize*ySize
 }
 
 func fitsHorizontally(i int) bool {
-	return i%boardSize+marksToWin <= boardSize
+	return i%xSize+marksToWin <= xSize
 }
 
 func fitsBackHorizontally(i int) bool {
-	return i%boardSize-(marksToWin-1) >= 0
+	return i%xSize-(marksToWin-1) >= 0
 }
 
 func getHorizontalRow(i int, cell string, board []string) []int {
@@ -25,7 +26,7 @@ func getHorizontalRow(i int, cell string, board []string) []int {
 
 	currentWinnerRow = append(currentWinnerRow, i)
 
-	for j := i + 1; currentRowCount < boardSize; j++ {
+	for j := i + 1; currentRowCount < xSize; j++ {
 		if board[j] == cell {
 			currentWinnerRow = append(currentWinnerRow, j)
 			currentRowCount++
@@ -51,7 +52,7 @@ func getVerticalRow(i int, cell string, board []string) []int {
 
 	currentWinnerRow = append(currentWinnerRow, i)
 
-	for j := i + boardSize; currentRowCount < boardSize; j += boardSize {
+	for j := i + xSize; currentRowCount < ySize; j += xSize {
 		if board[j] == cell {
 			currentWinnerRow = append(currentWinnerRow, j)
 			currentRowCount++
@@ -77,7 +78,7 @@ func getDiagonalLTRRow(i int, cell string, board []string) []int {
 
 	currentWinnerRow = append(currentWinnerRow, i)
 
-	for j := i + boardSize + 1; currentRowCount < boardSize; j += boardSize + 1 {
+	for j := i + xSize + 1; currentRowCount < xSize; j += xSize + 1 {
 		if board[j] == cell {
 			currentWinnerRow = append(currentWinnerRow, j)
 			currentRowCount++
@@ -103,7 +104,7 @@ func getDiagonalRTLRow(i int, cell string, board []string) []int {
 
 	currentWinnerRow = append(currentWinnerRow, i)
 
-	for j := i + boardSize - 1; currentRowCount < boardSize; j += boardSize - 1 {
+	for j := i + xSize - 1; currentRowCount < xSize; j += xSize - 1 {
 		if board[j] == cell {
 			currentWinnerRow = append(currentWinnerRow, j)
 			currentRowCount++

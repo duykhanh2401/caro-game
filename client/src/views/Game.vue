@@ -86,6 +86,7 @@
 							@touchmove="onTouchMove"
 							@touchstart="onTouchMove"
 							@touchend="onTouchEnd"
+							ref="table"
 						>
 							<tbody>
 								<tr
@@ -211,7 +212,10 @@ import useUserState, { type IUser } from '../composable/useUserState';
 import useConnectGlobal from '../composable/useConnectGlobal';
 import { fireConfetti } from '../utils/fireConfetti';
 const hoverCell = ref<number | null>();
-const gridCount = 15;
+const XCount = 13;
+const YCount = 17;
+
+const table = ref<HTMLTableElement>();
 
 const { currentRoom } = useRoomState();
 const { users, me } = useUserState();
@@ -249,30 +253,37 @@ function getRandomAvatar(): string {
 }
 
 function reset() {
-	currentRoom.value.data = new Array(gridCount * gridCount).fill(null);
+	currentRoom.value.data = new Array(XCount * YCount).fill(null);
 	currentRoom.value.gameEnd = false;
 	currentRoom.value.winnerRow = [];
 	currentRoom.value.turnClosest = null;
 }
 
 function getSplitDataArr() {
-	return new Array(Math.ceil(currentRoom.value.data.length / gridCount))
+	return new Array(Math.ceil(currentRoom.value.data.length / XCount))
 		.fill(null)
-		.map((item, i) =>
-			currentRoom.value.data.slice(gridCount * i, gridCount * (i + 1)),
-		);
+		.map((item, i) => currentRoom.value.data.slice(XCount * i, XCount * (i + 1)));
 }
 
 const getCellStyle = (index) => {
+	console.log(table.value?.clientHeight);
+
+	var size = '21px';
+	if (table.value?.clientHeight) {
+		size = `${table.value.clientHeight / YCount}px`;
+	}
 	const styles = {
-		height: `${100 / gridCount}%`,
-		width: `${100 / gridCount}%`,
+		height: size,
+		width: size,
+
+		// height: '26px',
+		// width: '26px',
 		animationDelay: '',
 	};
 
 	if (currentRoom.value.winnerRow.length > 0) {
 		const winIndex = currentRoom.value.winnerRow.findIndex((i) => i === index);
-		if (winIndex >= 0) styles.animationDelay = `${winIndex * (1 / gridCount)}s`;
+		if (winIndex >= 0) styles.animationDelay = `${winIndex * (1 / XCount)}s`;
 	}
 
 	return styles;
@@ -282,9 +293,8 @@ const getCellClassNames = (index: number) => {
 	var sameRow = false;
 	var sameColumn = false;
 	if (hoverCell.value) {
-		sameRow =
-			Math.floor(index / gridCount) === Math.floor(hoverCell.value / gridCount);
-		sameColumn = index % gridCount === hoverCell.value % gridCount;
+		sameRow = Math.floor(index / XCount) === Math.floor(hoverCell.value / XCount);
+		sameColumn = index % XCount === hoverCell.value % XCount;
 	}
 
 	return {
@@ -337,7 +347,7 @@ watch(currentRoom, (newData, oldData) => {
 	}
 });
 
-const getBoardIndex = (rowIndex, cellIndex) => rowIndex * gridCount + cellIndex;
+const getBoardIndex = (rowIndex, cellIndex) => rowIndex * XCount + cellIndex;
 
 function getClassCurrentUserTurn() {
 	if (
@@ -445,9 +455,9 @@ table {
 }
 
 .game {
-	height: 100%;
-	aspect-ratio: 1 / 1;
-	max-height: 95vw;
+	height: 90%;
+	aspect-ratio: 13 / 17;
+	// max-height: 100vw;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -458,7 +468,7 @@ table {
 
 .board-wrapper {
 	position: relative;
-	aspect-ratio: 1 / 1;
+	aspect-ratio: 13 / 17;
 	height: 100%;
 	max-width: 100%;
 
