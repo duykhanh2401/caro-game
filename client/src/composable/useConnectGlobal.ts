@@ -157,7 +157,7 @@ export default function useConnectGlobal() {
 				case ResponseEvents.GUEST_LEAVE_ROOM:
 					toast.info(res.body.message);
 					currentRoom.value = { ...currentRoom.value, ...res.body.room };
-					currentRoom.value.data = new Array(15 * 15).fill(null);
+					currentRoom.value.data = new Array(13 * 17).fill(null);
 					break;
 				case ResponseEvents.ME_LEFT_ROOM:
 					toast.info(res.body.message);
