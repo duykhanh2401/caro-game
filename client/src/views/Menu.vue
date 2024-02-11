@@ -117,7 +117,7 @@
 				class="flex mb-2 items-center gap-x-2 p-3 text-sm bg-white border text-gray-800 first:rounded-t-lg first:mt-0 last:rounded-b-lg dark:bg-slate-900 dark:border-gray-700 dark:text-gray-200"
 			>
 				<div class="w-full flex justify-between truncate">
-					<div class="flex-1">
+					<div class="flex-1 w-2/3 text-wrap whitespace-pre-wrap">
 						<div class="me-3 flex-1 text-xl font-bold">
 							{{ room.name }}
 						</div>
@@ -127,7 +127,7 @@
 					</div>
 					<button
 						type="button"
-						class="flex items-center gap-x-2 text-gray-500 hover:text-blue-500 whitespace-nowrap"
+						class="flex btn btn-primary items-center gap-x-2 whitespace-nowrap"
 						@click="joinRoom(room.id)"
 					>
 						Vào phòng
