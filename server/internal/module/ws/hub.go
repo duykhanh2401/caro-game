@@ -383,13 +383,11 @@ func (h *Hub) leaveRoom(req *Request) {
 	room, ok := h.room.Room(roomID)
 	if !ok {
 		h.error(conn, ErrNotFound)
+		fmt.Println("Not Found 386")
 		return
 	}
 	h.room.Leave(roomID, req.ClientID)
 	newRoom, ok := h.room.Room(roomID)
-	if !ok {
-		h.error(conn, ErrNotFound)
-	}
 
 	res := Response{
 		Body: map[string]interface{}{
